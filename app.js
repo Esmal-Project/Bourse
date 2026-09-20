@@ -1,4 +1,4 @@
-const $=id=>document.getElementById(id);let raw=[];let lastDataAt=0;let refreshTimer=null;let refreshing=false;
+const $=id=>document.getElementById(id);let raw=[];let lastDataAt=0;let refreshTimer=null;let liveTimer=null;let refreshing=false;let liveRefreshing=false;let currentInsCode=null;
 function markFresh(source="market"){
   lastDataAt=Date.now();
   const el=$("freshness");
@@ -49,9 +49,9 @@ async function loadLive(symbol){
   try{
     const searchRaw=await BourseAPI.search(symbol),matches=BourseMarket.normalizeSearch(searchRaw);
     if(!matches.length)throw new Error("نماد در TSETMC پیدا نشد");
-    const match=matches[0],insCode=match.insCode;
+    const match=matches[0],insCode=match.insCode;currentInsCode=insCode;
     const [q,b,c]=await Promise.all([BourseAPI.quote(insCode),BourseAPI.orderbook(insCode),BourseAPI.clientType(insCode)]);
-    renderLive(BourseMarket.normalizeQuote(q),BourseMarket.normalizeOrderbook(b),BourseMarket.normalizeClientType(c));
+    renderLive(BourseMarket.normalizeQuote(q),BourseMarket.normalizeOrderbook(b),BourseMarket.normalizeClientType(c));markFresh("Live");
     if(match.name) $("symbol").textContent=match.symbol+" — "+match.name;
   }catch(e){
     setStatus("quoteStatus","Worker جدید هنوز Deploy نشده یا TSETMC پاسخ نداد",true);
@@ -150,3 +150,22 @@ function startLiveRefresh(){
 }
 setInterval(updateFreshness,1000);
 startLiveRefresh();
+
+async function refreshCurrentLive(){
+  if(liveRefreshing||!currentInsCode||document.hidden)return;
+  liveRefreshing=true;
+  try{
+    const [q,b,c]=await Promise.all([
+      BourseAPI.quote(currentInsCode),
+      BourseAPI.orderbook(currentInsCode),
+      BourseAPI.clientType(currentInsCode)
+    ]);
+    renderLive(BourseMarket.normalizeQuote(q),BourseMarket.normalizeOrderbook(b),BourseMarket.normalizeClientType(c));
+    markFresh("Live");
+  }catch{} finally{liveRefreshing=false;updateFreshness();}
+}
+function startLiveDetailRefresh(){
+  clearInterval(liveTimer);
+  liveTimer=setInterval(refreshCurrentLive,window.BOURSE_CONFIG?.refreshIntervalMs??5000);
+}
+startLiveDetailRefresh();

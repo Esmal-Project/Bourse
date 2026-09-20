@@ -7,5 +7,6 @@ window.BOURSE_CONFIG={
   orderbookPath:"/tsetmc/orderbook",
   clientTypePath:"/tsetmc/client-type",
   refreshIntervalMs:5000,
-  staleAfterMs:15000
+  staleAfterMs:15000,
+  marketWatchFallbackUrl:"https://raw.githubusercontent.com/Esmal-Project/Bourse/main/data/market-watch.json"
 };

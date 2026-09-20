@@ -62,17 +62,22 @@ function render(symbol,rows){
   $("source").textContent="Cloudflare Worker / BRSAPI";$("raw").textContent=JSON.stringify(raw.at(-1),null,2);drawHistory($("chart"),rows.slice(-30));
   BourseAnalysis.render(BourseAnalysis.build(rows));
 }
+async function renderMarketRows(rows){
+  const sortKey=$("scanSort")?.value||"change";
+  const top=sortKey==="changeAsc"?BourseScanner.sort(rows,"change","asc").slice(0,30):BourseScanner.sort(rows,sortKey,"desc").slice(0,30);
+  $("scanTableBody").innerHTML=top.map(r=>"<tr class=\"scan-row\" data-symbol=\""+encodeURIComponent(r.symbol||"")+"\" title=\"برای باز کردن نماد کلیک کنید\"><td><strong>"+(r.symbol||"—")+"</strong><div class=\"muted\">"+(r.name||"")+"</div></td><td>"+money(r.last)+"</td><td class=\""+(r.change>=0?"positive":"negative")+"\">"+signed(r.change)+"%</td><td>"+money(r.volume)+"</td><td>"+money(r.value)+"</td><td>"+money(r.trades)+"</td></tr>").join("");
+}
 async function scanMarket(){
   setStatus("scanStatus","در حال دریافت Market Watch...");
   try{
     const rawWatch=await BourseAPI.marketWatch();
     const rows=BourseScanner.normalize(rawWatch);
     if(!rows.length)throw new Error("Market Watch داده‌ای برنگرداند");
-    const stats=BourseScanner.stats(rows),top=BourseScanner.sort(rows,"change","desc").slice(0,30);
+    const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;
     $("scanSummary").innerHTML=[
       ["کل نمادها",stats.count],["مثبت",stats.positive],["منفی",stats.negative],["بدون تغییر",stats.flat]
     ].map(x=>"<span class=\"scan-pill\">"+x[0]+" : "+Number(x[1]).toLocaleString("fa-IR")+"</span>").join("");
-    $("scanTableBody").innerHTML=top.map(r=>"<tr><td><strong>"+(r.symbol||"—")+"</strong><div class=\"muted\">"+(r.name||"")+"</div></td><td>"+money(r.last)+"</td><td class=\""+(r.change>=0?"positive":"negative")+"\">"+signed(r.change)+"%</td><td>"+money(r.volume)+"</td><td>"+money(r.value)+"</td><td>"+money(r.trades)+"</td></tr>").join("");
+    renderMarketRows(rows);
     setStatus("scanStatus","Market Watch دریافت شد • نمایش ۳۰ نماد با بیشترین رشد روز");
   }catch(e){setStatus("scanStatus","Worker جدید هنوز Deploy نشده یا Market Watch در دسترس نیست",true)}
 }
@@ -86,4 +91,12 @@ async function load(){
     loadFlow(symbol);loadLive(symbol);
   }catch(e){$("status").textContent=e.message;$("statusWrap").className="status error"}
 }
-$("loadBtn").addEventListener("click",load);$("inputSymbol").addEventListener("keydown",e=>{if(e.key==="Enter")load()});load();
+$("loadBtn").addEventListener("click",load);
+$("inputSymbol").addEventListener("keydown",e=>{if(e.key==="Enter")load()});
+$("scanBtn").addEventListener("click",scanMarket);
+$("scanSort").addEventListener("change",()=>{if(window.__lastMarketRows)renderMarketRows(window.__lastMarketRows)});
+document.addEventListener("click",e=>{
+  const row=e.target.closest(".scan-row");
+  if(row){$("inputSymbol").value=decodeURIComponent(row.dataset.symbol||"");load();}
+});
+load();

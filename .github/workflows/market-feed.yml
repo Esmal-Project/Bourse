@@ -1,6 +1,10 @@
 name: Market Data Relay
 
 on:
+  push:
+    paths:
+      - ".github/workflows/market-feed.yml"
+      - "scripts/fetch_market_watch.py"
   workflow_dispatch:
   schedule:
     - cron: "*/5 * * * *"

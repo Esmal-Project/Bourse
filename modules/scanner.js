@@ -1,17 +1,20 @@
 function scanNum(v){const n=Number(v);return Number.isFinite(n)?n:null}
 function normalizeMarketWatch(raw){
-  const rows=raw?.marketwatch||raw?.data||raw;
+  const rows=raw?.marketwatch||raw?.data||raw?.Items||raw?.items||raw;
   if(!Array.isArray(rows))return [];
   return rows.map(r=>{
-    const pl=scanNum(r?.pl??r?.pDrCotVal),py=scanNum(r?.py??r?.priceYesterday);
+    const lp=r?.pl??r?.pDrCotVal??r?.lastprice??r?.lastPrice?.value??r?.lastPrice?.price??r?.lastPrice;
+    const yp=r?.py??r?.priceYesterday??r?.yesterdayPrice?.value??r?.yesterdayPrice?.price??r?.yesterdayPrice;
+    const cp=r?.pc??r?.pClosing??r?.closingprice?.value??r?.closingPrice?.value??r?.closingPrice;
+    const pl=scanNum(lp),py=scanNum(yp);
     const change=pl!=null&&py?((pl-py)/py)*100:null;
     return {
-      insCode:r?.insCode??r?.ins_code??null,
-      symbol:r?.lVal18??r?.l18??r?.lVal18AFC??"",
-      name:r?.lVal30??r?.l30??"",
-      last:pl,close:scanNum(r?.pc??r?.pClosing),yesterday:py,
-      change,volume:scanNum(r?.tvol??r?.qTotTran5J),value:scanNum(r?.tval??r?.qTotCap),
-      trades:scanNum(r?.tno??r?.zTotTran),min:scanNum(r?.pmin??r?.priceMin),
+      insCode:r?.insCode??r?.ins_code??r?.instrumentId??r?.instrumentid??null,
+      symbol:r?.lVal18??r?.l18??r?.lVal18AFC??r?.instrument_Name??r?.instrumentName??"",
+      name:r?.lVal30??r?.l30??r?.companyNamePersian??r?.company_Name_Persian??"",
+      last:pl,close:scanNum(cp),yesterday:py,
+      change,volume:scanNum(r?.tvol??r?.qTotTran5J??r?.tradeVolume),value:scanNum(r?.tval??r?.qTotCap??r?.tradeValue),
+      trades:scanNum(r?.tno??r?.zTotTran??r?.tradeCount),min:scanNum(r?.pmin??r?.priceMin),
       max:scanNum(r?.pmax??r?.priceMax),flow:r?.flow??null,raw:r
     };
   }).filter(r=>r.insCode&&r.symbol);

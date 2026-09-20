@@ -1,6 +1,7 @@
 const $=id=>document.getElementById(id);let raw=[];let lastDataAt=0;let refreshTimer=null;let liveTimer=null;let refreshing=false;let liveRefreshing=false;let currentInsCode=null;
-function markFresh(source="market"){
-  lastDataAt=Date.now();
+function observedTime(raw){const v=raw?.fetchedAt??raw?.meta?.fetchedAt??raw?.__meta?.fetchedAt;const t=v?Date.parse(v):NaN;return Number.isFinite(t)?t:Date.now()}
+function markFresh(source="market",observedAt=Date.now()){
+  lastDataAt=observedAt;
   const el=$("freshness");
   if(el){el.textContent="داده: "+source+" • همین الان";el.className="freshness fresh";}
 }
@@ -102,7 +103,7 @@ async function scanMarket(){
     const rawWatch=await BourseAPI.marketWatch();
     const rows=BourseScanHistory.compare(BourseScore.addResearchPriority(BourseScanner.activity(BourseScanner.normalize(rawWatch))));
     if(!rows.length)throw new Error("Market Watch داده‌ای برنگرداند");
-    const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;markFresh("Market Watch");
+    const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;markFresh("Market Watch",observedTime(rawWatch));
     window.__scanStats=stats;
     BourseScanHistory.save(rows);
     renderMarketRows(rows);

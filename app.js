@@ -97,15 +97,18 @@ async function loadSnapshotQuote(symbol){
     return true;
   }catch{return false}
 }
-async function loadLive(symbol){
-  currentSymbol=symbol;currentInsCode=null;
+async function loadLive(symbol,knownInsCode=null){
+  currentSymbol=symbol;currentInsCode=knownInsCode||null;
   try{
-    const searchRaw=await BourseAPI.search(symbol),matches=BourseMarket.normalizeSearch(searchRaw);
-    if(!matches.length)throw new Error("نماد در TSETMC پیدا نشد");
-    const match=matches[0],insCode=match.insCode;currentInsCode=insCode;
+    let match=null,insCode=knownInsCode;
+    if(!insCode){
+      const searchRaw=await BourseAPI.search(symbol),matches=BourseMarket.normalizeSearch(searchRaw);
+      if(!matches.length)throw new Error("نماد در TSETMC پیدا نشد");
+      match=matches[0];insCode=match.insCode;currentInsCode=insCode;
+    }
     const [q,b,c]=await Promise.all([BourseAPI.quote(insCode),BourseAPI.orderbook(insCode),BourseAPI.clientType(insCode)]);
     renderLive(BourseMarket.normalizeQuote(q),BourseMarket.normalizeOrderbook(b),BourseMarket.normalizeClientType(c));markFresh("Live",observedTime(q),"live");
-    if(match.name) $("symbol").textContent=match.symbol+" — "+match.name;
+    if(match?.name) $("symbol").textContent=match.symbol+" — "+match.name;
   }catch(e){
     if(!(await loadSnapshotQuote(symbol))){
       setStatus("quoteStatus","فید لحظه‌ای در دسترس نیست",true);
@@ -149,6 +152,7 @@ function renderScanSummary(rows){
   const s=BourseScanner.stats(rows),el=$("scanSummary");if(!el)return;
   el.innerHTML=[["نمادهای دریافتی",s.count],["مثبت",s.positive],["منفی",s.negative],["بدون تغییر",s.flat],["ارزش کل",money(s.totalValue)]].map(x=>"<span class=\"scan-pill\"><span class=\"muted\">"+x[0]+"</span> <strong>"+x[1]+"</strong></span>").join("");
 }
+function rememberMarketRows(rows){window.__marketIndex=new Map(rows.map(r=>[r.symbol,r.insCode]).filter(x=>x[0]&&x[1]));}
 function renderMarketRows(rows){
   const sortKey=$("scanSort")?.value||"change";
   const query=String($("scanQuery")?.value||"").trim().toLocaleLowerCase("fa-IR");
@@ -164,19 +168,20 @@ async function scanMarket(){
     if(!rows.length)throw new Error("Market Watch داده‌ای برنگرداند");
     const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;setText("symbol","کل بورس");setText("price",money(stats.count)+" نماد");setText("change","مثبت "+stats.positive+" • منفی "+stats.negative+" • بدون تغییر "+stats.flat);$("change").className="change";markFresh("Market Watch",observedTime(rawWatch),feedMode(rawWatch));
     window.__scanStats=stats;
+    rememberMarketRows(rows);
     BourseScanHistory.save(rows);
     renderScanSummary(rows);renderMarketRows(rows);renderFeedMeta(rawWatch,rows);
     setStatus("scanStatus","Market Watch دریافت شد • فیلترها قابل اعمال هستند");
   }catch(e){setStatus("scanStatus","Market Watch در دسترس نیست",true)}
 }
-async function load(){
-  const symbol=BourseSymbol.set($("inputSymbol").value);if(!symbol)return;
+async function load(inputSymbol=null,knownInsCode=null){
+  const symbol=BourseSymbol.set(inputSymbol??$("inputSymbol").value);if(!symbol)return;
   $("status").textContent="در حال دریافت...";$("statusWrap").className="status";
   setStatus("flowStatus","در حال دریافت...");
   try{
     raw=await BourseAPI.history(symbol);const rows=normalize(raw);if(!rows.length)throw new Error("داده تاریخی برای این نماد پیدا نشد");
     render(symbol,rows);markFresh("History");$("status").textContent="دریافت موفق • "+rows.length+" رکورد";$("statusWrap").className="status online";
-    loadFlow(symbol);loadLive(symbol);
+    loadFlow(symbol);loadLive(symbol,knownInsCode);
   }catch(e){$("status").textContent=e.message;$("statusWrap").className="status error"}
 }
 $("loadBtn").addEventListener("click",load);
@@ -188,7 +193,7 @@ $("scanPreset").addEventListener("change",()=>{if(window.__lastMarketRows)render
 $("scanQuery").addEventListener("input",()=>{if(window.__lastMarketRows)renderMarketRows(window.__lastMarketRows)});
 document.addEventListener("click",e=>{
   const row=e.target.closest(".scan-row");
-  if(row){$("inputSymbol").value=decodeURIComponent(row.dataset.symbol||"");load();}
+  if(row){const symbol=decodeURIComponent(row.dataset.symbol||"");$("inputSymbol").value=symbol;load(symbol,row.dataset.inscode||window.__marketIndex?.get(symbol)||null);}
 });
 scanMarket();
 function startLiveRefresh(){
@@ -202,6 +207,7 @@ function startLiveRefresh(){
       const rows=BourseScore.addResearchPriority(BourseScanner.activity(BourseScanner.normalize(rawWatch)));
       if(rows.length){
         window.__lastMarketRows=rows;
+        rememberMarketRows(rows);
         if(document.getElementById("scanTableBody").children.length||lastDataAt)renderMarketRows(rows);
         markFresh("Market Watch",observedTime(rawWatch),feedMode(rawWatch));
         renderScanSummary(rows);renderFeedMeta(rawWatch,rows);

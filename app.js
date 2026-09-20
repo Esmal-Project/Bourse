@@ -76,8 +76,8 @@ function renderSnapshotQuote(row){
   $("change").className="change "+(row.change==null?"":row.change>=0?"positive":"negative");
   $("volume").textContent=money(row.volume);$("trades").textContent=money(row.trades);$("value").textContent=money(row.value);
   $("min").textContent=money(row.min);$("max").textContent=money(row.max);$("yesterday").textContent=money(row.yesterday);
-  $("date").textContent="Market Watch";
   setStatus("quoteStatus","Market Watch snapshot • آخرین/پایانی بازار");
+  $("source").textContent="TSETMC Market Watch via snapshot";
   $("quoteDetails").innerHTML=[
     ["آخرین",money(row.last)],["پایانی",money(row.close)],["حجم",money(row.volume)],["تعداد معامله",money(row.trades)]
   ].map(x=>"<div class=\"quote-item\"><span>"+x[0]+"</span><strong>"+x[1]+"</strong></div>").join("");
@@ -98,7 +98,7 @@ async function loadSnapshotQuote(symbol){
   }catch{return false}
 }
 async function loadLive(symbol){
-  currentSymbol=symbol;
+  currentSymbol=symbol;currentInsCode=null;
   try{
     const searchRaw=await BourseAPI.search(symbol),matches=BourseMarket.normalizeSearch(searchRaw);
     if(!matches.length)throw new Error("نماد در TSETMC پیدا نشد");
@@ -162,7 +162,7 @@ async function scanMarket(){
     BourseScanHistory.save(rows);
     renderMarketRows(rows);renderFeedMeta(rawWatch,rows);
     setStatus("scanStatus","Market Watch دریافت شد • فیلترها قابل اعمال هستند");
-  }catch(e){setStatus("scanStatus","Worker جدید هنوز Deploy نشده یا Market Watch در دسترس نیست",true)}
+  }catch(e){setStatus("scanStatus","Market Watch در دسترس نیست",true)}
 }
 async function load(){
   const symbol=BourseSymbol.set($("inputSymbol").value);if(!symbol)return;

@@ -5,6 +5,10 @@ on:
     paths:
       - ".github/workflows/market-feed.yml"
       - "scripts/fetch_market_watch.py"
+      - "config/**"
+      - "modules/**"
+      - "app.js"
+      - "index.html"
   workflow_dispatch:
   schedule:
     - cron: "*/5 * * * *"

@@ -1,1 +1,1 @@
-window.BOURSE_CONFIG={worker:"https://brsapi-proxy.yasharesmaeili.workers.dev"};
+window.BOURSE_CONFIG={worker:"https://brsapi-proxy.yasharesmaeili.workers.dev",historyPath:"/tsetmc/history"};

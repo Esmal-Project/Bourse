@@ -162,7 +162,7 @@ async function scanMarket(){
     const rawWatch=await BourseAPI.marketWatch();
     const rows=BourseScanHistory.compare(BourseScore.addResearchPriority(BourseScanner.activity(BourseScanner.normalize(rawWatch))));
     if(!rows.length)throw new Error("Market Watch داده‌ای برنگرداند");
-    const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;markFresh("Market Watch",observedTime(rawWatch),feedMode(rawWatch));
+    const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;setText("symbol","کل بورس");setText("price",money(stats.count)+" نماد");setText("change","مثبت "+stats.positive+" • منفی "+stats.negative+" • بدون تغییر "+stats.flat);$("change").className="change";markFresh("Market Watch",observedTime(rawWatch),feedMode(rawWatch));
     window.__scanStats=stats;
     BourseScanHistory.save(rows);
     renderScanSummary(rows);renderMarketRows(rows);renderFeedMeta(rawWatch,rows);

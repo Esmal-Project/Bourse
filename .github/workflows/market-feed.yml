@@ -18,7 +18,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: market-data-relay
+  group: market-data-relay-v2
   cancel-in-progress: true
 
 jobs:

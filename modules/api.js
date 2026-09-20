@@ -33,6 +33,14 @@ const API={
     if(Array.isArray(data.result))return data.result;
     throw new Error("ساختار پاسخ تاریخچه ناشناخته است");
   },
+  async clientHistory(symbol){
+    const data=await requestJson(routeUrl(requirePath("clientHistoryPath"),{symbol}),"Client history");
+    if(Array.isArray(data))return data;
+    if(Array.isArray(data.data))return data.data;
+    if(Array.isArray(data.result))return data.result;
+    if(Array.isArray(data.clientTypeHistory))return data.clientTypeHistory;
+    throw new Error("ساختار پاسخ تاریخچه حقیقی/حقوقی ناشناخته است");
+  },
   async quote(insCode){return requestJson(routeUrl(requirePath("quotePath"),{insCode}),"Quote")},
   async orderbook(insCode){return requestJson(routeUrl(requirePath("orderbookPath"),{insCode}),"Orderbook")},
   async clientType(insCode){return requestJson(routeUrl(requirePath("clientTypePath"),{insCode}),"ClientType")},

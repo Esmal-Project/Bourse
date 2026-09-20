@@ -5,5 +5,7 @@ window.BOURSE_CONFIG={
   marketWatchPath:"/tsetmc/market-watch",
   quotePath:"/tsetmc/quote",
   orderbookPath:"/tsetmc/orderbook",
-  clientTypePath:"/tsetmc/client-type"
+  clientTypePath:"/tsetmc/client-type",
+  refreshIntervalMs:5000,
+  staleAfterMs:15000
 };

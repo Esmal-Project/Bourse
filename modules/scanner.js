@@ -7,7 +7,8 @@ function scanPercent(v){
   return scanNum(v);
 }
 function normalizeMarketWatch(raw){
-  const rows=raw?.marketwatch||raw?.data||raw?.Items||raw?.items||raw;
+  const base=raw?.payload??raw;
+  const rows=base?.marketwatch||base?.data||base?.Items||base?.items||base;
   if(!Array.isArray(rows))return [];
   return rows.map(r=>{
     const pl=scanNum(r?.pl??r?.pDrCotVal??r?.lastprice??r?.lastPrice);

@@ -129,7 +129,7 @@ function render(symbol,rows){
   $("source").textContent="Cloudflare Worker / BRSAPI";$("raw").textContent=JSON.stringify(raw.at(-1),null,2);drawHistory($("chart"),rows.slice(-30));
   BourseAnalysis.render(BourseAnalysis.build(rows));
 }
-async function filterMarketRows(rows){
+function filterMarketRows(rows){
   const preset=$("scanPreset")?.value||"";
   let f=Object.assign({},BourseFilters.preset(preset));
   const read=id=>{const v=Number($(id)?.value);return Number.isFinite(v)?v:null};

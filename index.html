@@ -1,12 +1,25 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bourse Terminal</title>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bourse Terminal</title><link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>BOURSE TERMINAL</h1>
-  <p>GitHub write connection verified.</p>
-</body>
-</html>
+<main class="app">
+<header class="topbar"><div class="brand">BOURSE TERMINAL</div><div id="statusWrap" class="status"><span class="dot"></span><span id="status">آماده</span></div></header>
+<section class="search"><input id="inputSymbol" value="بترانس" placeholder="نماد..."><button id="loadBtn">نمایش نماد</button></section>
+<section class="hero"><div class="symbol" id="symbol">—</div><div class="price" id="price">—</div><div id="change" class="change">—</div></section>
+<section class="grid">
+<div class="stat"><div class="label">حجم معاملات</div><div class="value" id="volume">—</div></div>
+<div class="stat"><div class="label">تعداد معاملات</div><div class="value" id="trades">—</div></div>
+<div class="stat"><div class="label">ارزش معاملات</div><div class="value" id="value">—</div></div>
+<div class="stat"><div class="label">دیروز</div><div class="value" id="yesterday">—</div></div>
+<div class="stat"><div class="label">حداقل</div><div class="value" id="min">—</div></div>
+<div class="stat"><div class="label">حداکثر</div><div class="value" id="max">—</div></div>
+<div class="stat"><div class="label">اولین</div><div class="value" id="first">—</div></div>
+</section>
+<section class="panel chart"><canvas id="chart"></canvas></section>
+<section class="panel raw"><div class="label">آخرین داده خام</div><pre id="raw">—</pre></section>
+</main>
+<script src="modules/api.js"></script><script src="modules/chart.js"></script><script src="app.js"></script>
+</body></html>

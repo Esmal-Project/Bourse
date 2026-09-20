@@ -62,9 +62,21 @@ function render(symbol,rows){
   $("source").textContent="Cloudflare Worker / BRSAPI";$("raw").textContent=JSON.stringify(raw.at(-1),null,2);drawHistory($("chart"),rows.slice(-30));
   BourseAnalysis.render(BourseAnalysis.build(rows));
 }
-async function renderMarketRows(rows){
+async function filterMarketRows(rows){
+  const preset=$("scanPreset")?.value||"";
+  let f=Object.assign({},BourseFilters.preset(preset));
+  const read=id=>{const v=Number($(id)?.value);return Number.isFinite(v)?v:null};
+  const minActivity=read("minActivity"),minChange=read("minChange"),maxChange=read("maxChange"),minValue=read("minValue");
+  if(minActivity!=null)f.minActivity=minActivity;
+  if(minChange!=null)f.minChange=minChange;
+  if(maxChange!=null)f.maxChange=maxChange;
+  if(minValue!=null)f.minValue=minValue;
+  return BourseFilters.apply(rows,f);
+}
+function renderMarketRows(rows){
   const sortKey=$("scanSort")?.value||"change";
-  const top=sortKey==="changeAsc"?BourseScanner.sort(rows,"change","asc").slice(0,30):BourseScanner.sort(rows,sortKey,"desc").slice(0,30);
+  const filtered=filterMarketRows(rows);
+  const top=sortKey==="changeAsc"?BourseScanner.sort(filtered,"change","asc").slice(0,30):BourseScanner.sort(filtered,sortKey,"desc").slice(0,30);
   $("scanTableBody").innerHTML=top.map(r=>"<tr class=\"scan-row\" data-symbol=\""+encodeURIComponent(r.symbol||"")+"\" title=\"برای باز کردن نماد کلیک کنید\"><td><strong>"+(r.symbol||"—")+"</strong><div class=\"muted\">"+(r.name||"")+"</div></td><td>"+money(r.last)+"</td><td class=\""+(r.change>=0?"positive":"negative")+"\">"+signed(r.change)+"%</td><td>"+money(r.volume)+"</td><td>"+money(r.value)+"</td><td>"+money(r.trades)+"</td><td>"+(r.activityScore==null?"—":r.activityScore.toFixed(1))+"</td></tr>").join("");
 }
 async function scanMarket(){
@@ -74,11 +86,9 @@ async function scanMarket(){
     const rows=BourseScanner.activity(BourseScanner.normalize(rawWatch));
     if(!rows.length)throw new Error("Market Watch داده‌ای برنگرداند");
     const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;
-    $("scanSummary").innerHTML=[
-      ["کل نمادها",stats.count],["مثبت",stats.positive],["منفی",stats.negative],["بدون تغییر",stats.flat]
-    ].map(x=>"<span class=\"scan-pill\">"+x[0]+" : "+Number(x[1]).toLocaleString("fa-IR")+"</span>").join("");
+    window.__scanStats=stats;
     renderMarketRows(rows);
-    setStatus("scanStatus","Market Watch دریافت شد • نمایش ۳۰ نماد با بیشترین رشد روز");
+    setStatus("scanStatus","Market Watch دریافت شد • فیلترها قابل اعمال هستند");
   }catch(e){setStatus("scanStatus","Worker جدید هنوز Deploy نشده یا Market Watch در دسترس نیست",true)}
 }
 async function load(){
@@ -95,6 +105,8 @@ $("loadBtn").addEventListener("click",load);
 $("inputSymbol").addEventListener("keydown",e=>{if(e.key==="Enter")load()});
 $("scanBtn").addEventListener("click",scanMarket);
 $("scanSort").addEventListener("change",()=>{if(window.__lastMarketRows)renderMarketRows(window.__lastMarketRows)});
+$("applyFiltersBtn").addEventListener("click",()=>{if(window.__lastMarketRows)renderMarketRows(window.__lastMarketRows)});
+$("scanPreset").addEventListener("change",()=>{if(window.__lastMarketRows)renderMarketRows(window.__lastMarketRows)});
 document.addEventListener("click",e=>{
   const row=e.target.closest(".scan-row");
   if(row){$("inputSymbol").value=decodeURIComponent(row.dataset.symbol||"");load();}

@@ -1,21 +1,33 @@
-function scanNum(v){const n=Number(v);return Number.isFinite(n)?n:null}
+function scanNum(v){
+  if(v!=null&&typeof v==="object")v=v.value??v.Value??v.amount??v.price??v.number;
+  const n=Number(v);return Number.isFinite(n)?n:null;
+}
+function scanPercent(v){
+  if(v!=null&&typeof v==="object")v=v.percent??v.Percent??v.value??v.Value??v.change??v.Change;
+  return scanNum(v);
+}
 function normalizeMarketWatch(raw){
   const rows=raw?.marketwatch||raw?.data||raw?.Items||raw?.items||raw;
   if(!Array.isArray(rows))return [];
   return rows.map(r=>{
-    const lp=r?.pl??r?.pDrCotVal??r?.lastprice??r?.lastPrice?.value??r?.lastPrice?.price??r?.lastPrice;
-    const yp=r?.py??r?.priceYesterday??r?.yesterdayPrice?.value??r?.yesterdayPrice?.price??r?.yesterdayPrice;
-    const cp=r?.pc??r?.pClosing??r?.closingprice?.value??r?.closingPrice?.value??r?.closingPrice;
-    const pl=scanNum(lp),py=scanNum(yp);
-    const change=pl!=null&&py?((pl-py)/py)*100:null;
+    const pl=scanNum(r?.pl??r?.pDrCotVal??r?.lastprice??r?.lastPrice);
+    const py=scanNum(r?.py??r?.priceYesterday??r?.yesterdayPrice);
+    const explicit=scanPercent(r?.pricechangepercent??r?.priceChangePercent??r?.lastPriceChangePercent??r?.lastpricechangepercent);
+    const change=explicit??(pl!=null&&py?((pl-py)/py)*100:null);
     return {
       insCode:r?.insCode??r?.ins_code??r?.instrumentId??r?.instrumentid??null,
       symbol:r?.lVal18??r?.l18??r?.lVal18AFC??r?.instrument_Name??r?.instrumentName??"",
       name:r?.lVal30??r?.l30??r?.companyNamePersian??r?.company_Name_Persian??"",
-      last:pl,close:scanNum(cp),yesterday:py,
-      change,volume:scanNum(r?.tvol??r?.qTotTran5J??r?.tradeVolume),value:scanNum(r?.tval??r?.qTotCap??r?.tradeValue),
-      trades:scanNum(r?.tno??r?.zTotTran??r?.tradeCount),min:scanNum(r?.pmin??r?.priceMin),
-      max:scanNum(r?.pmax??r?.priceMax),flow:r?.flow??null,raw:r
+      last:pl,
+      close:scanNum(r?.pc??r?.pClosing??r?.closingprice??r?.closingPrice),
+      yesterday:py,
+      change,
+      volume:scanNum(r?.tvol??r?.qTotTran5J??r?.tradeVolume),
+      value:scanNum(r?.tval??r?.qTotCap??r?.tradeValue),
+      trades:scanNum(r?.tno??r?.zTotTran??r?.tradeCount),
+      min:scanNum(r?.pmin??r?.priceMin??r?.minValue),
+      max:scanNum(r?.pmax??r?.priceMax??r?.maxValue),
+      flow:r?.flow??null,raw:r
     };
   }).filter(r=>r.insCode&&r.symbol);
 }
@@ -35,7 +47,6 @@ function scanStats(rows){
     totalValue:rows.reduce((s,r)=>s+(r.value||0),0)
   };
 }
-
 function percentileRanks(rows,key){
   const vals=rows.map(r=>scanNum(r[key])).filter(v=>v!=null).sort((a,b)=>a-b);
   if(!vals.length)return new Map();
@@ -59,4 +70,17 @@ function addActivityScore(rows){
   });
   return enriched;
 }
-window.BourseScanner={normalize:normalizeMarketWatch,sort:scanSort,stats:scanStats,activity:addActivityScore};
+function filterNum(v){const n=Number(v);return Number.isFinite(n)?n:null}
+function applyMarketFilters(rows,f){
+  return rows.filter(r=>{
+    const minChange=filterNum(f.minChange),maxChange=filterNum(f.maxChange),minValue=filterNum(f.minValue),minVolume=filterNum(f.minVolume),minTrades=filterNum(f.minTrades),minActivity=filterNum(f.minActivity);
+    if(minChange!=null&&(r.change==null||r.change<minChange))return false;
+    if(maxChange!=null&&(r.change==null||r.change>maxChange))return false;
+    if(minValue!=null&&(r.value==null||r.value<minValue))return false;
+    if(minVolume!=null&&(r.volume==null||r.volume<minVolume))return false;
+    if(minTrades!=null&&(r.trades==null||r.trades<minTrades))return false;
+    if(minActivity!=null&&(r.activityScore==null||r.activityScore<minActivity))return false;
+    return true;
+  });
+}
+window.BourseScanner={normalize:normalizeMarketWatch,sort:scanSort,stats:scanStats,activity:addActivityScore,filter:applyMarketFilters};

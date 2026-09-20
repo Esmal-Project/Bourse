@@ -42,6 +42,8 @@ def parse_payload(url,body,ctype):
     data=json.loads(body.decode("utf-8"))
     return data
 
+KNOWN_PROXIES=["http://85.133.190.40:8097"]
+
 def proxy_list():
     url=("https://api.proxyscrape.com/v4/free-proxy-list/get"
          "?request=display_proxies&proxy_format=protocolipport&format=text&country=ir")
@@ -57,8 +59,9 @@ def proxy_list():
         return []
 
 sources=[("direct",t,None) for t in TARGETS]
-proxies=proxy_list()
-random.shuffle(proxies)
+proxies=[p for p in KNOWN_PROXIES if p]
+proxies += [p for p in proxy_list() if p not in proxies]
+random.shuffle(proxies[1:])
 for p in proxies:
     for target in TARGETS[:2]:
         sources.append((p,target,p))

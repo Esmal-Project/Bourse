@@ -64,5 +64,72 @@
 <script src="modules/market.js"></script>
 <script src="modules/analysis.js"></script>
 <script src="modules/flow.js"></script><script src="modules/scanner.js"></script><script src="modules/scan-history.js"></script><script src="modules/filters.js"></script><script src="modules/score.js"></script>
+<script>
+(function(){
+  async function emergencyMarketBootstrap(){
+    try{
+      if(!window.fetch)return;
+      var res=await fetch("./data/market-watch.json?t="+Date.now(),{cache:"no-store"});
+      if(!res.ok)throw new Error("snapshot HTTP "+res.status);
+      var raw=await res.json();
+      var rows=((raw&&raw.payload&&raw.payload.marketwatch)||[]).filter(function(r){return r&&r.insCode&&r.lva;});
+      if(!rows.length)throw new Error("snapshot empty");
+      function n(v){var x=Number(v);return Number.isFinite(x)?x:null}
+      function esc(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+      function money(v){return n(v)==null?"—":n(v).toLocaleString("fa-IR")}
+      function change(r){
+        var last=n(r.pdv),py=n(r.py),pc=n(r.pc);
+        if(pc!=null&&py) return pc/py*100;
+        return last!=null&&py?((last-py)/py)*100:null;
+      }
+      rows=rows.map(function(r){
+        return {
+          insCode:r.insCode,symbol:r.lva,name:r.lvc||"",first:n(r.pf),last:n(r.pdv),close:n(r.pcl),
+          yesterday:n(r.py),change:change(r),volume:n(r.tvol),value:n(r.tval),trades:n(r.ztt),min:n(r.pmn),max:n(r.pmx)
+        };
+      });
+      var pos=rows.filter(function(r){return r.change>0}).length;
+      var neg=rows.filter(function(r){return r.change<0}).length;
+      var flat=rows.length-pos-neg;
+      var totalValue=rows.reduce(function(s,r){return s+(r.value||0)},0);
+      var price=document.getElementById("price");
+      if(price)price.textContent=rows.length.toLocaleString("fa-IR")+" نماد";
+      var symbol=document.getElementById("symbol");
+      if(symbol)symbol.textContent="داشبورد کل بازار";
+      var ch=document.getElementById("change");
+      if(ch)ch.textContent="مثبت "+pos.toLocaleString("fa-IR")+" • منفی "+neg.toLocaleString("fa-IR")+" • بدون تغییر "+flat.toLocaleString("fa-IR");
+      var summary=document.getElementById("scanSummary");
+      if(summary)summary.innerHTML=[
+        ["نمادهای دریافتی",rows.length],["مثبت",pos],["منفی",neg],["بدون تغییر",flat],["ارزش کل",totalValue.toLocaleString("fa-IR")]
+      ].map(function(x){return '<span class="scan-pill"><span class="muted">'+x[0]+'</span> <strong>'+x[1]+"</strong></span>"}).join("");
+      var body=document.getElementById("scanTableBody");
+      if(body){
+        var top=rows.slice().sort(function(a,b){return (b.change??-Infinity)-(a.change??-Infinity)}).slice(0,800);
+        body.innerHTML=top.map(function(r){
+          var cls=r.change==null?"":r.change>=0?"positive":"negative";
+          return '<tr class="scan-row" data-symbol="'+encodeURIComponent(r.symbol||"")+'" data-inscode="'+esc(r.insCode)+'">'+
+            "<td><strong>"+esc(r.symbol)+"</strong><div class="muted">"+esc(r.name)+"</div></td>"+
+            "<td>"+money(r.first)+"</td><td>"+money(r.last)+"</td><td>"+money(r.close)+"</td><td>"+money(r.yesterday)+"</td>"+
+            '<td class="'+cls+'">'+(r.change==null?"—":(r.change>=0?"+":"")+r.change.toFixed(2))+"%</td>"+
+            "<td>"+money(r.volume)+"</td><td>"+money(r.value)+"</td><td>"+money(r.trades)+"</td><td>"+money(r.min)+"</td><td>"+money(r.max)+"</td>"+
+            "<td>—</td><td>—</td><td>—</td></tr>";
+        }).join("");
+      }
+      var meta=document.getElementById("feedMeta");
+      if(meta)meta.textContent="فید: GitHub snapshot • "+rows.length.toLocaleString("fa-IR")+" نماد • آخرین دریافت "+(raw.fetchedAt||"—");
+      var status=document.getElementById("scanStatus");
+      if(status)status.textContent="Market Watch دریافت شد • "+rows.length.toLocaleString("fa-IR")+" نماد • fallback مستقیم";
+      var freshness=document.getElementById("freshness");
+      if(freshness)freshness.textContent="داده: snapshot دوره‌ای";
+    }catch(e){
+      var status=document.getElementById("scanStatus");
+      if(status)status.textContent="خطای دریافت Market Watch: "+e.message;
+      var st=document.getElementById("status");
+      if(st)st.textContent="خطای دریافت داده";
+    }
+  }
+  setTimeout(emergencyMarketBootstrap,1200);
+})();
+</script>
 <script src="app.js"></script>
 </body></html>

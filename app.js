@@ -1,4 +1,16 @@
-const $=id=>document.getElementById(id);let raw=[];
+const $=id=>document.getElementById(id);let raw=[];let lastDataAt=0;let refreshTimer=null;let refreshing=false;
+function markFresh(source="market"){
+  lastDataAt=Date.now();
+  const el=$("freshness");
+  if(el){el.textContent="داده: "+source+" • همین الان";el.className="freshness fresh";}
+}
+function updateFreshness(){
+  const el=$("freshness");if(!el)return;
+  if(!lastDataAt){el.textContent="داده: —";return;}
+  const age=Math.floor((Date.now()-lastDataAt)/1000);
+  el.textContent="داده: "+(age<2?"همین الان":age+" ثانیه پیش");
+  el.className="freshness "+(age*1000>=(window.BOURSE_CONFIG?.staleAfterMs??15000)?"stale":"fresh");
+}
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
 function money(v){return v==null?"—":Number(v).toLocaleString("fa-IR")}
 function signed(v,d=2){return v==null?"—":(v>=0?"+":"")+Number(v).toFixed(d)}
@@ -90,7 +102,7 @@ async function scanMarket(){
     const rawWatch=await BourseAPI.marketWatch();
     const rows=BourseScanHistory.compare(BourseScore.addResearchPriority(BourseScanner.activity(BourseScanner.normalize(rawWatch))));
     if(!rows.length)throw new Error("Market Watch داده‌ای برنگرداند");
-    const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;
+    const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;markFresh("Market Watch");
     window.__scanStats=stats;
     BourseScanHistory.save(rows);
     renderMarketRows(rows);
@@ -103,7 +115,7 @@ async function load(){
   setStatus("flowStatus","در حال دریافت...");
   try{
     raw=await BourseAPI.history(symbol);const rows=normalize(raw);if(!rows.length)throw new Error("داده تاریخی برای این نماد پیدا نشد");
-    render(symbol,rows);$("status").textContent="دریافت موفق • "+rows.length+" رکورد";$("statusWrap").className="status online";
+    render(symbol,rows);markFresh("History");$("status").textContent="دریافت موفق • "+rows.length+" رکورد";$("statusWrap").className="status online";
     loadFlow(symbol);loadLive(symbol);
   }catch(e){$("status").textContent=e.message;$("statusWrap").className="status error"}
 }
@@ -118,3 +130,23 @@ document.addEventListener("click",e=>{
   if(row){$("inputSymbol").value=decodeURIComponent(row.dataset.symbol||"");load();}
 });
 load();
+function startLiveRefresh(){
+  clearInterval(refreshTimer);
+  const ms=window.BOURSE_CONFIG?.refreshIntervalMs??5000;
+  refreshTimer=setInterval(async()=>{
+    if(refreshing||document.hidden)return;
+    refreshing=true;
+    try{
+      const rawWatch=await BourseAPI.marketWatch();
+      const rows=BourseScore.addResearchPriority(BourseScanner.activity(BourseScanner.normalize(rawWatch)));
+      if(rows.length){
+        window.__lastMarketRows=rows;
+        if(document.getElementById("scanTableBody").children.length||lastDataAt)renderMarketRows(rows);
+        markFresh("Market Watch");
+      }
+    }catch{}
+    finally{refreshing=false;updateFreshness();}
+  },ms);
+}
+setInterval(updateFreshness,1000);
+startLiveRefresh();

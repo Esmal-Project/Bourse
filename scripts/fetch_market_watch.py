@@ -79,7 +79,7 @@ for label,url,proxy in sources:
             with open("data/market-watch.json","w",encoding="utf-8") as f:
                 json.dump(out,f,ensure_ascii=False,separators=(",",":"))
             rows=payload.get("marketwatch",[])
-            meta={"fetchedAt":out["fetchedAt"],"source":label+" -> "+url,"viaProxy":bool(proxy),"rowCount":len(rows),"symbols":[{"symbol":x.get("lva"),"name":x.get("lvc"),"insCode":x.get("insCode")} for x in rows[:50]]}
+            meta={"fetchedAt":out["fetchedAt"],"source":label+" -> "+url,"viaProxy":bool(proxy),"rowCount":len(rows),"symbols":[{"symbol":x.get("lva") or x.get("symbol"),"name":x.get("lvc") or x.get("name"),"insCode":x.get("insCode")} for x in rows[:50]]}
             with open("data/market-watch-meta.json","w",encoding="utf-8") as f:
                 json.dump(meta,f,ensure_ascii=False,separators=(",",":"))
             print("SUCCESS",label,"rows=",len(rows))

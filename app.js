@@ -77,13 +77,13 @@ function renderMarketRows(rows){
   const sortKey=$("scanSort")?.value||"change";
   const filtered=filterMarketRows(rows);
   const top=sortKey==="changeAsc"?BourseScanner.sort(filtered,"change","asc").slice(0,30):BourseScanner.sort(filtered,sortKey,"desc").slice(0,30);
-  $("scanTableBody").innerHTML=top.map(r=>"<tr class=\"scan-row\" data-symbol=\""+encodeURIComponent(r.symbol||"")+"\" title=\"برای باز کردن نماد کلیک کنید\"><td><strong>"+(r.symbol||"—")+"</strong><div class=\"muted\">"+(r.name||"")+"</div></td><td>"+money(r.last)+"</td><td class=\""+(r.change>=0?"positive":"negative")+"\">"+signed(r.change)+"%</td><td>"+money(r.volume)+"</td><td>"+money(r.value)+"</td><td>"+money(r.trades)+"</td><td>"+(r.activityScore==null?"—":r.activityScore.toFixed(1))+"</td></tr>").join("");
+  $("scanTableBody").innerHTML=top.map(r=>"<tr class=\"scan-row\" data-symbol=\""+encodeURIComponent(r.symbol||"")+"\" title=\"برای باز کردن نماد کلیک کنید\"><td><strong>"+(r.symbol||"—")+"</strong><div class=\"muted\">"+(r.name||"")+"</div></td><td>"+money(r.last)+"</td><td class=\""+(r.change>=0?"positive":"negative")+"\">"+signed(r.change)+"%</td><td>"+money(r.volume)+"</td><td>"+money(r.value)+"</td><td>"+money(r.trades)+"</td><td>"+(r.activityScore==null?"—":r.activityScore.toFixed(1))+"</td><td class="priority">"+(r.researchPriority==null?"—":r.researchPriority.toFixed(1))+"</td></tr>").join("");
 }
 async function scanMarket(){
   setStatus("scanStatus","در حال دریافت Market Watch...");
   try{
     const rawWatch=await BourseAPI.marketWatch();
-    const rows=BourseScanner.activity(BourseScanner.normalize(rawWatch));
+    const rows=BourseScore.addResearchPriority(BourseScanner.activity(BourseScanner.normalize(rawWatch)));
     if(!rows.length)throw new Error("Market Watch داده‌ای برنگرداند");
     const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;
     window.__scanStats=stats;

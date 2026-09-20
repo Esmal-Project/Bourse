@@ -108,7 +108,7 @@
         body.innerHTML=top.map(function(r){
           var cls=r.change==null?"":r.change>=0?"positive":"negative";
           return '<tr class="scan-row" data-symbol="'+encodeURIComponent(r.symbol||"")+'" data-inscode="'+esc(r.insCode)+'">'+
-            "<td><strong>"+esc(r.symbol)+"</strong><div class="muted">"+esc(r.name)+"</div></td>"+
+            '<td><strong>'+esc(r.symbol)+'</strong><div class="muted">'+esc(r.name)+'</div></td>'+
             "<td>"+money(r.first)+"</td><td>"+money(r.last)+"</td><td>"+money(r.close)+"</td><td>"+money(r.yesterday)+"</td>"+
             '<td class="'+cls+'">'+(r.change==null?"—":(r.change>=0?"+":"")+r.change.toFixed(2))+"%</td>"+
             "<td>"+money(r.volume)+"</td><td>"+money(r.value)+"</td><td>"+money(r.trades)+"</td><td>"+money(r.min)+"</td><td>"+money(r.max)+"</td>"+
@@ -131,5 +131,5 @@
   setTimeout(emergencyMarketBootstrap,1200);
 })();
 </script>
-<script src="app.js?v=c4e90388"></script>
+<script src="app.js?v=30bf431b"></script>
 </body></html>

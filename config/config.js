@@ -10,5 +10,6 @@ window.BOURSE_CONFIG={
   staleAfterMs:15000,
   snapshotCacheMs:60000,
   snapshotStaleAfterMs:720000,
-  marketWatchFallbackUrl:"https://raw.githubusercontent.com/Esmal-Project/Bourse/main/data/market-watch.json"
+  marketWatchFallbackUrl:"./data/market-watch.json",
+  marketWatchFallbackUrlSecondary:"https://raw.githubusercontent.com/Esmal-Project/Bourse/main/data/market-watch.json"
 };

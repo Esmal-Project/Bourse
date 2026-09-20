@@ -1,9 +1,9 @@
 window.BOURSE_CONFIG={
   worker:"https://brsapi-proxy.yasharesmaeili.workers.dev",
   historyPath:"/tsetmc/history",
-  clientHistoryPath:null,
-  marketWatchPath:null,
-  quotePath:null,
-  orderbookPath:null,
-  clientTypePath:null
+  searchPath:"/tsetmc/search",
+  marketWatchPath:"/tsetmc/market-watch",
+  quotePath:"/tsetmc/quote",
+  orderbookPath:"/tsetmc/orderbook",
+  clientTypePath:"/tsetmc/client-type"
 };

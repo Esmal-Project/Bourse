@@ -16,12 +16,19 @@
 <div class="stat"><div class="label">دیروز</div><div class="value" id="yesterday">—</div></div>
 <div class="stat"><div class="label">حداقل</div><div class="value" id="min">—</div></div>
 <div class="stat"><div class="label">حداکثر</div><div class="value" id="max">—</div></div>
-<div class="stat"><div class="label">اولین</div><div class="value" id="first">—</div></div><div class="stat"><div class="label">تاریخ آخرین داده</div><div class="value" id="date">—</div></div>
+<div class="stat"><div class="label">اولین</div><div class="value" id="first">—</div></div>
+<div class="stat"><div class="label">تاریخ آخرین داده</div><div class="value" id="date">—</div></div>
+</section>
+<section class="market-panels">
+<div class="panel market-card"><div class="panel-title">قیمت لحظه‌ای</div><div id="quoteStatus" class="muted">مسیر Quote هنوز به Worker متصل نشده</div></div>
+<div class="panel market-card"><div class="panel-title">دفتر سفارشات</div><div id="orderbookStatus" class="muted">مسیر Order Book هنوز به Worker متصل نشده</div></div>
+<div class="panel market-card"><div class="panel-title">حقیقی / حقوقی</div><div id="clientTypeStatus" class="muted">مسیر Client Type هنوز به Worker متصل نشده</div></div>
 </section>
 <section class="panel chart"><canvas id="chart"></canvas></section>
 <section class="panel raw"><div class="label">منبع: <span id="source">—</span></div><div class="label">آخرین داده خام</div><pre id="raw">—</pre></section>
 </main>
+<script src="config/config.js"></script>
 <script src="modules/api.js"></script>
-  <script src="modules/symbol.js"></script><script src="modules/chart.js"></script>
-  <script src="modules/market.js"></script><script src="app.js"></script>
+<script src="modules/symbol.js"></script><script src="modules/chart.js"></script>
+<script src="modules/market.js"></script><script src="app.js"></script>
 </body></html>

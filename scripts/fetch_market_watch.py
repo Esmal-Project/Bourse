@@ -1,138 +1,137 @@
-import json,urllib.request,urllib.error,datetime,os,random
+import concurrent.futures
+import datetime
+import json
+import os
+import random
+import urllib.request
 
 TARGETS=[
-"https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&paperTypes%5B0%5D=1&paperTypes%5B1%5D=2&paperTypes%5B2%5D=3&paperTypes%5B3%5D=4&paperTypes%5B4%5D=5&paperTypes%5B5%5D=6&paperTypes%5B6%5D=7&paperTypes%5B7%5D=8&paperTypes%5B8%5D=9&withBestLimits=false&hEven=0&RefID=0",
-"https://www.tsetmc.com/tsev2/data/MarketWatchPlus.aspx?h=0&r=0",
-"http://service.tsetmc.com/tsev2/data/MarketWatchPlus.aspx?h=0&r=0"
+    "https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&paperTypes%5B0%5D=1&paperTypes%5B1%5D=2&paperTypes%5B2%5D=3&paperTypes%5B3%5D=4&paperTypes%5B4%5D=5&paperTypes%5B5%5D=6&paperTypes%5B6%5D=7&paperTypes%5B7%5D=8&paperTypes%5B8%5D=9&withBestLimits=false&hEven=0&RefID=0",
+    "https://www.tsetmc.com/tsev2/data/MarketWatchPlus.aspx?h=0&r=0",
+    "http://service.tsetmc.com/tsev2/data/MarketWatchPlus.aspx?h=0&r=0",
 ]
 HEADERS={
-"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153 Safari/537.36",
-"Accept":"application/json,text/plain,*/*",
-"Referer":"https://www.tsetmc.com/",
-"Origin":"https://www.tsetmc.com"
+    "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153 Safari/537.36",
+    "Accept":"application/json,text/plain,*/*",
+    "Referer":"https://www.tsetmc.com/",
+    "Origin":"https://www.tsetmc.com",
 }
+KNOWN_PROXIES=["http://85.133.190.40:8097"]
 
-def get(url,proxy=None,timeout=8):
+def fetch(url, proxy=None, timeout=5):
     handler=urllib.request.ProxyHandler({"http":proxy,"https":proxy}) if proxy else urllib.request.ProxyHandler({})
     opener=urllib.request.build_opener(handler)
-    req=urllib.request.Request(url,headers=HEADERS)
-    with opener.open(req,timeout=timeout) as r:
-        return r.status,r.read(),r.headers.get("content-type","")
+    req=urllib.request.Request(url, headers=HEADERS)
+    with opener.open(req, timeout=timeout) as res:
+        return res.status, res.read(), res.headers.get("content-type","")
 
-def parse_payload(url,body,ctype):
+def parse_payload(url, body):
     if "MarketWatchPlus.aspx" in url:
         text=body.decode("utf-8","ignore")
         parts=text.split("@")
-        if len(parts)<3:return None
+        if len(parts)<3:
+            return None
         rows=[]
         for raw in parts[2].split(";"):
             x=raw.split(",")
-            if len(x)<14:continue
-            try:
-                rows.append({
-                    "insCode":x[1] if x[1] else x[0],
-                    "symbol":x[2],"name":x[3],
-                    "first":x[5],"close":x[6],"last":x[7],
-                    "trades":x[8],"volume":x[9],"value":x[10],
-                    "min":x[11],"max":x[12],"yesterday":x[13]
-                })
-            except Exception: pass
-        if not rows:return None
-        return {"marketwatch":rows}
-    data=json.loads(body.decode("utf-8"))
-    return data
+            if len(x)<14:
+                continue
+            rows.append({
+                "insCode":x[1] if x[1] else x[0],
+                "symbol":x[2],
+                "name":x[3],
+                "first":x[5],
+                "close":x[6],
+                "last":x[7],
+                "trades":x[8],
+                "volume":x[9],
+                "value":x[10],
+                "min":x[11],
+                "max":x[12],
+                "yesterday":x[13],
+            })
+        return {"marketwatch":rows} if rows else None
+    try:
+        return json.loads(body.decode("utf-8"))
+    except Exception:
+        return None
 
-KNOWN_PROXIES=["http://85.133.190.40:8097"]
+def write_result(payload, source, via_proxy):
+    rows=payload.get("marketwatch",[]) if isinstance(payload,dict) else []
+    out={
+        "fetchedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "source":source,
+        "viaProxy":via_proxy,
+        "payload":payload,
+    }
+    os.makedirs("data",exist_ok=True)
+    with open("data/market-watch.json","w",encoding="utf-8") as f:
+        json.dump(out,f,ensure_ascii=False,separators=(",",":"))
+    meta={
+        "fetchedAt":out["fetchedAt"],
+        "source":source,
+        "viaProxy":via_proxy,
+        "rowCount":len(rows),
+        "symbols":[
+            {"symbol":x.get("symbol") or x.get("lva"),
+             "name":x.get("name") or x.get("lvc"),
+             "insCode":x.get("insCode")}
+            for x in rows[:50]
+        ],
+    }
+    with open("data/market-watch-meta.json","w",encoding="utf-8") as f:
+        json.dump(meta,f,ensure_ascii=False,separators=(",",":"))
+    print("SUCCESS",source,"rows=",len(rows))
 
+def try_one(label, url, proxy):
+    try:
+        status, body, _ = fetch(url, proxy=proxy)
+        if 200 <= status < 300:
+            payload=parse_payload(url,body)
+            if payload:
+                return (payload, label+" -> "+url, bool(proxy))
+    except Exception:
+        pass
+    return None
+
+# 1) Known working Iran proxy first.
+for proxy in KNOWN_PROXIES:
+    for target in TARGETS[:2]:
+        result=try_one("known-proxy",target,proxy)
+        if result:
+            write_result(*result)
+            raise SystemExit(0)
+
+# 2) Direct access can still work on some runners.
+for target in TARGETS:
+    result=try_one("direct",target,None)
+    if result:
+        write_result(*result)
+        raise SystemExit(0)
+
+# 3) Discover a small set of Iranian proxies only if the fast paths fail.
 def proxy_list():
     url=("https://api.proxyscrape.com/v4/free-proxy-list/get"
          "?request=display_proxies&proxy_format=protocolipport&format=text&country=ir")
     try:
-        _,body,_=get(url,timeout=10)
-        out=[]
-        for line in body.decode("utf-8","ignore").splitlines():
-            line=line.strip()
-            if line.startswith("http://") or line.startswith("https://"):
-                out.append(line)
-        return out[:40]
+        _, body, _=fetch(url, timeout=8)
+        return [x.strip() for x in body.decode("utf-8","ignore").splitlines()
+                if x.startswith("http://") or x.startswith("https://")][:12]
     except Exception:
         return []
 
-sources=[("known",t,p) for p in KNOWN_PROXIES for t in TARGETS[:2]]
-sources += [("direct",t,None) for t in TARGETS]
-last=None
-for label,url,proxy in sources:
-    try:
-        status,body,ctype=get(url,proxy=proxy)
-        payload=parse_payload(url,body,ctype)
-        if payload:
-            out={
-                "fetchedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                "source":label+" -> "+url,
-                "viaProxy":bool(proxy),
-                "payload":payload
-            }
-            os.makedirs("data",exist_ok=True)
-            with open("data/market-watch.json","w",encoding="utf-8") as f:
-                json.dump(out,f,ensure_ascii=False,separators=(",",":"))
-            rows=payload.get("marketwatch",[])
-            meta={"fetchedAt":out["fetchedAt"],"source":label+" -> "+url,"viaProxy":bool(proxy),"rowCount":len(rows),"symbols":[{"symbol":x.get("lva") or x.get("symbol"),"name":x.get("lvc") or x.get("name"),"insCode":x.get("insCode")} for x in rows[:50]]}
-            with open("data/market-watch-meta.json","w",encoding="utf-8") as f:
-                json.dump(meta,f,ensure_ascii=False,separators=(",",":"))
-            print("SUCCESS",label,"rows=",len(rows))
-            raise SystemExit(0)
-        last=f"{label}: invalid payload"
-    except Exception as e:
-        last=f"{label}: {type(e).__name__}: {e}"
+candidates=[p for p in proxy_list() if p not in KNOWN_PROXIES]
+tasks=[(p,target) for p in candidates for target in TARGETS[:2]]
+random.shuffle(tasks)
 
-# Known relay failed; only then pay the cost of discovering more proxies.
-proxies=proxy_list()
-random.shuffle(proxies)
-for p in proxies:
-    for target in TARGETS[:2]:
-        try:
-            status,body,ctype=get(target,proxy=p)
-            payload=parse_payload(target,body,ctype)
-            if payload:
-                out={
-                    "fetchedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                    "source":p+" -> "+target,
-                    "viaProxy":True,
-                    "payload":payload
-                }
-                os.makedirs("data",exist_ok=True)
-                with open("data/market-watch.json","w",encoding="utf-8") as f:
-                    json.dump(out,f,ensure_ascii=False,separators=(",",":"))
-                rows=payload.get("marketwatch",[])
-                meta={"fetchedAt":out["fetchedAt"],"source":p+" -> "+target,"viaProxy":True,"rowCount":len(rows),"symbols":[{"symbol":x.get("lva") or x.get("symbol"),"name":x.get("lvc") or x.get("name"),"insCode":x.get("insCode")} for x in rows[:50]]}
-                with open("data/market-watch-meta.json","w",encoding="utf-8") as f:
-                    json.dump(meta,f,ensure_ascii=False,separators=(",",":"))
-                print("SUCCESS",p,"rows=",len(rows))
-                raise SystemExit(0)
-        except Exception as e:
-            last=f"{p}: {type(e).__name__}: {e}"
-for label,url,proxy in sources:
-    try:
-        status,body,ctype=get(url,proxy=proxy)
-        payload=parse_payload(url,body,ctype)
-        if payload:
-            out={
-                "fetchedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),
-                "source":label+" -> "+url,
-                "viaProxy":bool(proxy),
-                "payload":payload
-            }
-            os.makedirs("data",exist_ok=True)
-            with open("data/market-watch.json","w",encoding="utf-8") as f:
-                json.dump(out,f,ensure_ascii=False,separators=(",",":"))
-            rows=payload.get("marketwatch",[])
-            meta={"fetchedAt":out["fetchedAt"],"source":label+" -> "+url,"viaProxy":bool(proxy),"rowCount":len(rows),"symbols":[{"symbol":x.get("lva") or x.get("symbol"),"name":x.get("lvc") or x.get("name"),"insCode":x.get("insCode")} for x in rows[:50]]}
-            with open("data/market-watch-meta.json","w",encoding="utf-8") as f:
-                json.dump(meta,f,ensure_ascii=False,separators=(",",":"))
-            print("SUCCESS",label,"rows=",len(rows))
+with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+    futures=[pool.submit(try_one,p,target,p) for p,target in tasks]
+    for future in concurrent.futures.as_completed(futures):
+        result=future.result()
+        if result:
+            for other in futures:
+                other.cancel()
+            write_result(*result)
             raise SystemExit(0)
-        last=f"{label}: invalid payload"
-    except Exception as e:
-        last=f"{label}: {type(e).__name__}: {e}"
 
-raise SystemExit("All TSETMC market-watch sources failed. Last error: "+str(last))
+raise SystemExit("All TSETMC market-watch sources failed")

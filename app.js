@@ -162,8 +162,29 @@ async function refreshCurrentLive(){
       BourseAPI.clientType(currentInsCode)
     ]);
     renderLive(BourseMarket.normalizeQuote(q),BourseMarket.normalizeOrderbook(b),BourseMarket.normalizeClientType(c));
-    markFresh("Live");
-  }catch{} finally{liveRefreshing=false;updateFreshness();}
+    markFresh("Live Quote");
+  }catch{
+    try{
+      const symbol=BourseSymbol.get();
+      const rows=normalize(await BourseAPI.history(symbol));
+      const d=rows.at(-1);
+      if(d){
+        $("price").textContent=money(d.last||d.close);
+        const prev=num(d.yesterday)||num(rows.at(-2)?.close);
+        const p=prev?((num(d.last||d.close)-prev)/prev)*100:null;
+        $("change").textContent=p==null?"—":(p>=0?"+":"")+p.toFixed(2)+"%";
+        $("change").className="change "+(p==null?"":p>=0?"positive":"negative");
+        $("volume").textContent=money(d.volume);$("trades").textContent=money(d.trades);$("value").textContent=money(d.value);
+        $("min").textContent=money(d.min);$("max").textContent=money(d.max);$("yesterday").textContent=money(d.yesterday);
+        $("first").textContent=money(d.first);$("date").textContent=d.date||"—";
+        setStatus("quoteStatus","آخرین رکورد BRSAPI History");
+        $("quoteDetails").innerHTML=[
+          ["آخرین",money(d.last||d.close)],["پایانی",money(d.close)],["حجم",money(d.volume)],["تعداد معامله",money(d.trades)]
+        ].map(x=>"<div class=\"quote-item\"><span>"+x[0]+"</span><strong>"+x[1]+"</strong></div>").join("");
+        markFresh("BRS History");
+      }
+    }catch{}
+  } finally{liveRefreshing=false;updateFreshness();}
 }
 function startLiveDetailRefresh(){
   clearInterval(liveTimer);

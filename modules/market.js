@@ -1,6 +1,6 @@
 function marketNumber(v){const n=Number(v);return Number.isFinite(n)?n:null}
 function normalizeQuote(raw){
-  const x=raw?.closingPriceInfo||raw?.data||raw;
+  const x=raw?.payload?.closingPriceInfo||raw?.payload?.data||raw?.payload||raw;
   return {
     insCode:x?.insCode??x?.inscode??null,
     last:marketNumber(x?.pDrCotVal??x?.pl),
@@ -16,7 +16,7 @@ function normalizeQuote(raw){
   };
 }
 function normalizeOrderbook(raw){
-  const rows=raw?.bestLimits||raw?.data||raw;
+  const rows=raw?.payload?.bestLimits||raw?.payload?.data||raw?.payload||raw;
   if(!Array.isArray(rows))return [];
   return rows.map(x=>({
     number:x?.number,
@@ -25,7 +25,7 @@ function normalizeOrderbook(raw){
   }));
 }
 function normalizeClientType(raw){
-  const x=raw?.clientType||raw?.data||raw;
+  const x=raw?.payload?.clientType||raw?.payload?.data||raw?.payload||raw;
   return {
     buyIndividualVolume:marketNumber(x?.buy_I_Volume),
     buyLegalVolume:marketNumber(x?.buy_N_Volume),

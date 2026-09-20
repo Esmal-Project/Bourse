@@ -37,6 +37,46 @@ function updateFreshness(){
 }
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
 function money(v){return v==null?"—":Number(v).toLocaleString("fa-IR")}
+function searchKey(v){
+  return String(v??"")
+    .normalize("NFKC")
+    .trim()
+    .replace(/[يى]/g,"ی")
+    .replace(/ك/g,"ک")
+    .replace(/[\u200c\u200d\u200e\u200f]/g,"")
+    .replace(/\s+/g,"")
+    .toLocaleLowerCase("fa-IR");
+}
+function marketWatchRows(raw){
+  try{return BourseScanner.normalize(raw)}catch{return []}
+}
+async function findSymbolInMarket(requested){
+  const key=searchKey(requested);
+  if(!key)return null;
+  const candidates=[];
+  try{
+    const watch=await BourseAPI.marketWatch();
+    const rows=marketWatchRows(watch);
+    const exact=rows.find(r=>searchKey(r.symbol)===key);
+    const prefix=exact||rows.find(r=>searchKey(r.symbol).startsWith(key));
+    const name=prefix||rows.find(r=>searchKey(r.name).includes(key));
+    if(name)return {row:name,watch,rows};
+  }catch{}
+  try{
+    const fallbackUrl=window.BOURSE_CONFIG?.marketWatchFallbackUrl;
+    if(fallbackUrl){
+      const res=await fetch(fallbackUrl+"?t="+Date.now(),{cache:"no-store"});
+      if(res.ok){
+        const watch=await res.json(),rows=marketWatchRows(watch);
+        const exact=rows.find(r=>searchKey(r.symbol)===key);
+        const prefix=exact||rows.find(r=>searchKey(r.symbol).startsWith(key));
+        const name=prefix||rows.find(r=>searchKey(r.name).includes(key));
+        if(name)return {row:name,watch,rows};
+      }
+    }
+  }catch{}
+  return null;
+}
 function signed(v,d=2){return v==null?"—":(v>=0?"+":"")+Number(v).toFixed(d)}
 function normalize(rows){return rows.map(r=>({date:r.date,time:r.time,close:num(r.pc),last:num(r.pl),min:num(r.pmin),max:num(r.pmax),yesterday:num(r.py),first:num(r.pf),volume:num(r.tvol),value:num(r.tval),trades:num(r.tno)})).filter(r=>r.close||r.last).sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.time||"").localeCompare(String(b.time||"")))}
 function setText(id,value){const el=$(id);if(el)el.textContent=value}
@@ -180,59 +220,72 @@ async function load(inputSymbol=null,knownInsCode=null){
   $("status").textContent="در حال جستجوی نماد...";
   $("statusWrap").className="status";
   setStatus("flowStatus","در حال آماده‌سازی...");
-  currentSymbol=requested;currentInsCode=knownInsCode||null;
-  let marketRow=null,marketRows=[];
+  currentSymbol=requested;
+  currentInsCode=knownInsCode||null;
+
+  let marketRow=null,watch=null,marketRows=[];
   try{
-    const watch=await BourseAPI.marketWatch();
-    marketRows=BourseScanner.normalize(watch);
-    const q=requested.toLocaleLowerCase("fa-IR");
-    marketRow=marketRows.find(r=>String(r.symbol||"").trim().toLocaleLowerCase("fa-IR")===q);
-    if(!marketRow)marketRow=marketRows.find(r=>String(r.symbol||"").toLocaleLowerCase("fa-IR").startsWith(q));
-    if(!marketRow)marketRow=marketRows.find(r=>String(r.name||"").toLocaleLowerCase("fa-IR").includes(q));
-    if(marketRow){
-      currentInsCode=knownInsCode||marketRow.insCode||null;
-      $("inputSymbol").value=marketRow.symbol||requested;
-      renderSnapshotQuote(marketRow);
-      $("symbol").textContent=(marketRow.symbol||requested)+(marketRow.name?" — "+marketRow.name:"");
+    if(knownInsCode){
+      const found=await findSymbolInMarket(requested);
+      if(found){marketRow=found.row;watch=found.watch;marketRows=found.rows;}
+    }else{
+      const found=await findSymbolInMarket(requested);
+      if(found){marketRow=found.row;watch=found.watch;marketRows=found.rows;}
+    }
+  }catch{}
+
+  if(marketRow){
+    currentInsCode=knownInsCode||marketRow.insCode||null;
+    currentSymbol=marketRow.symbol||requested;
+    $("inputSymbol").value=currentSymbol;
+    renderSnapshotQuote(marketRow);
+    $("symbol").textContent=currentSymbol+(marketRow.name?" — "+marketRow.name:"");
+    $("first").textContent=money(marketRow.first);
+    $("date").textContent=watch?.fetchedAt?new Date(watch.fetchedAt).toLocaleString("fa-IR"):"—";
+    if(watch){
       markFresh("Market Watch",observedTime(watch),feedMode(watch));
       renderFeedMeta(watch,marketRows);
-      $("status").textContent="نماد پیدا شد • در حال تکمیل اطلاعات";
-      $("statusWrap").className="status online";
     }
-  }catch(e){}
-  if(!marketRow && !knownInsCode){
+    $("status").textContent="نماد پیدا شد • اطلاعات بازار نمایش داده شد";
+    $("statusWrap").className="status online";
+  }else if(!knownInsCode){
     try{
-      const searchRaw=await BourseAPI.search(requested),matches=BourseMarket.normalizeSearch(searchRaw);
-      const m=matches[0];
+      const searchRaw=await BourseAPI.search(requested);
+      const matches=BourseMarket.normalizeSearch(searchRaw);
+      const key=searchKey(requested);
+      const m=matches.find(x=>searchKey(x.symbol)===key)||matches.find(x=>searchKey(x.symbol).startsWith(key))||matches[0];
       if(m){
         currentInsCode=m.insCode;
+        currentSymbol=m.symbol;
         $("inputSymbol").value=m.symbol;
         $("symbol").textContent=m.symbol+(m.name?" — "+m.name:"");
         $("status").textContent="نماد پیدا شد • در حال دریافت اطلاعات";
         $("statusWrap").className="status online";
       }
-    }catch(e){}
+    }catch{}
   }
+
   if(!currentInsCode){
-    setStatus("quoteStatus","نماد در Market Watch پیدا نشد",true);
+    setStatus("quoteStatus","نماد «"+requested+"» در داده بازار پیدا نشد",true);
     $("status").textContent="نماد «"+requested+"» پیدا نشد";
     $("statusWrap").className="status error";
     return;
   }
-  const symbol=$("inputSymbol").value||requested;
+
+  const symbol=$("inputSymbol").value||currentSymbol||requested;
   try{
     raw=await BourseAPI.history(symbol);
     const rows=normalize(raw);
     if(rows.length){
       render(symbol,rows);
-      $("status").textContent="دریافت موفق • "+rows.length+" رکورد";
+      $("status").textContent="دریافت موفق • "+rows.length+" رکورد تاریخی";
       $("statusWrap").className="status online";
       loadFlow(symbol);
     }else{
       setStatus("flowStatus","تاریخچه این نماد هنوز در دسترس نیست");
     }
   }catch(e){
-    setStatus("flowStatus","تاریخچه نماد در دسترس نیست",true);
+    setStatus("flowStatus","تاریخچه نماد در دسترس نیست؛ داده Market Watch نمایش داده شد",true);
   }
   loadLive(symbol,currentInsCode);
 }

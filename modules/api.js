@@ -45,6 +45,13 @@ const API={
   async quote(insCode){return requestJson(routeUrl(requirePath("quotePath"),{insCode}),"Quote")},
   async orderbook(insCode){return requestJson(routeUrl(requirePath("orderbookPath"),{insCode}),"Orderbook")},
   async clientType(insCode){return requestJson(routeUrl(requirePath("clientTypePath"),{insCode}),"ClientType")},
-  async marketWatch(){return requestJson(routeUrl(requirePath("marketWatchPath")),"MarketWatch")}
+  async marketWatch(){
+    try{return await requestJson(routeUrl(requirePath("marketWatchPath")),"MarketWatch")}
+    catch(primary){
+      const fallback=CONFIG.marketWatchFallbackUrl;
+      if(!fallback)throw primary;
+      return requestJson(fallback,"MarketWatch snapshot");
+    }
+  }
 };
 window.BourseAPI=API;

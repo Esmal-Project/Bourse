@@ -145,10 +145,15 @@ function deltaHtml(v){
   const cls=v>0?"delta-up":v<0?"delta-down":"delta-flat";
   return "<span class=\""+cls+"\">"+(v>0?"+":"")+v.toFixed(1)+"</span>";
 }
+function renderScanSummary(rows){
+  const s=BourseScanner.stats(rows),el=$("scanSummary");if(!el)return;
+  el.innerHTML=[["نمادهای دریافتی",s.count],["مثبت",s.positive],["منفی",s.negative],["بدون تغییر",s.flat],["ارزش کل",money(s.totalValue)]].map(x=>"<span class=\"scan-pill\"><span class=\"muted\">"+x[0]+"</span> <strong>"+x[1]+"</strong></span>").join("");
+}
 function renderMarketRows(rows){
   const sortKey=$("scanSort")?.value||"change";
-  const filtered=filterMarketRows(rows);
-  const top=sortKey==="changeAsc"?BourseScanner.sort(filtered,"change","asc").slice(0,30):BourseScanner.sort(filtered,sortKey,"desc").slice(0,30);
+  const query=String($("scanQuery")?.value||"").trim().toLocaleLowerCase("fa-IR");
+  const filtered=filterMarketRows(rows).filter(r=>!query||String(r.symbol||"").toLocaleLowerCase("fa-IR").includes(query)||String(r.name||"").toLocaleLowerCase("fa-IR").includes(query));
+  const top=sortKey==="changeAsc"?BourseScanner.sort(filtered,"change","asc").slice(0,800):BourseScanner.sort(filtered,sortKey,"desc").slice(0,800);
   $("scanTableBody").innerHTML=top.map(r=>"<tr class=\"scan-row\" data-symbol=\""+encodeURIComponent(r.symbol||"")+"\" title=\"برای باز کردن نماد کلیک کنید\"><td><strong>"+(r.symbol||"—")+"</strong><div class=\"muted\">"+(r.name||"")+"</div></td><td>"+money(r.last)+"</td><td class=\""+(r.change>=0?"positive":"negative")+"\">"+signed(r.change)+"%</td><td>"+money(r.volume)+"</td><td>"+money(r.value)+"</td><td>"+money(r.trades)+"</td><td>"+(r.activityScore==null?"—":r.activityScore.toFixed(1))+"</td><td class=\"priority\">"+(r.researchPriority==null?"—":r.researchPriority.toFixed(1))+"</td><td>"+deltaHtml(r.scoreDelta)+"</td></tr>").join("");
 }
 async function scanMarket(){
@@ -160,7 +165,7 @@ async function scanMarket(){
     const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;markFresh("Market Watch",observedTime(rawWatch),feedMode(rawWatch));
     window.__scanStats=stats;
     BourseScanHistory.save(rows);
-    renderMarketRows(rows);renderFeedMeta(rawWatch,rows);
+    renderScanSummary(rows);renderMarketRows(rows);renderFeedMeta(rawWatch,rows);
     setStatus("scanStatus","Market Watch دریافت شد • فیلترها قابل اعمال هستند");
   }catch(e){setStatus("scanStatus","Market Watch در دسترس نیست",true)}
 }
@@ -180,11 +185,12 @@ $("scanBtn").addEventListener("click",scanMarket);
 $("scanSort").addEventListener("change",()=>{if(window.__lastMarketRows)renderMarketRows(window.__lastMarketRows)});
 $("applyFiltersBtn").addEventListener("click",()=>{if(window.__lastMarketRows)renderMarketRows(window.__lastMarketRows)});
 $("scanPreset").addEventListener("change",()=>{if(window.__lastMarketRows)renderMarketRows(window.__lastMarketRows)});
+$("scanQuery").addEventListener("input",()=>{if(window.__lastMarketRows)renderMarketRows(window.__lastMarketRows)});
 document.addEventListener("click",e=>{
   const row=e.target.closest(".scan-row");
   if(row){$("inputSymbol").value=decodeURIComponent(row.dataset.symbol||"");load();}
 });
-load();
+scanMarket();
 function startLiveRefresh(){
   clearInterval(refreshTimer);
   const ms=window.BOURSE_CONFIG?.refreshIntervalMs??5000;
@@ -198,7 +204,7 @@ function startLiveRefresh(){
         window.__lastMarketRows=rows;
         if(document.getElementById("scanTableBody").children.length||lastDataAt)renderMarketRows(rows);
         markFresh("Market Watch",observedTime(rawWatch),feedMode(rawWatch));
-        renderFeedMeta(rawWatch,rows);
+        renderScanSummary(rows);renderFeedMeta(rawWatch,rows);
       }
     }catch{}
     finally{refreshing=false;updateFreshness();}

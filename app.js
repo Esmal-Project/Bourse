@@ -175,14 +175,66 @@ async function scanMarket(){
   }catch(e){setStatus("scanStatus","Market Watch در دسترس نیست",true)}
 }
 async function load(inputSymbol=null,knownInsCode=null){
-  const symbol=BourseSymbol.set(inputSymbol??$("inputSymbol").value);if(!symbol)return;
-  $("status").textContent="در حال دریافت...";$("statusWrap").className="status";
-  setStatus("flowStatus","در حال دریافت...");
+  const requested=BourseSymbol.clean(inputSymbol??$("inputSymbol").value);
+  if(!requested){$("inputSymbol").focus();return;}
+  $("status").textContent="در حال جستجوی نماد...";
+  $("statusWrap").className="status";
+  setStatus("flowStatus","در حال آماده‌سازی...");
+  currentSymbol=requested;currentInsCode=knownInsCode||null;
+  let marketRow=null,marketRows=[];
   try{
-    raw=await BourseAPI.history(symbol);const rows=normalize(raw);if(!rows.length)throw new Error("داده تاریخی برای این نماد پیدا نشد");
-    render(symbol,rows);markFresh("History");$("status").textContent="دریافت موفق • "+rows.length+" رکورد";$("statusWrap").className="status online";
-    loadFlow(symbol);loadLive(symbol,knownInsCode);
-  }catch(e){$("status").textContent=e.message;$("statusWrap").className="status error"}
+    const watch=await BourseAPI.marketWatch();
+    marketRows=BourseScanner.normalize(watch);
+    const q=requested.toLocaleLowerCase("fa-IR");
+    marketRow=marketRows.find(r=>String(r.symbol||"").trim().toLocaleLowerCase("fa-IR")===q);
+    if(!marketRow)marketRow=marketRows.find(r=>String(r.symbol||"").toLocaleLowerCase("fa-IR").startsWith(q));
+    if(!marketRow)marketRow=marketRows.find(r=>String(r.name||"").toLocaleLowerCase("fa-IR").includes(q));
+    if(marketRow){
+      currentInsCode=knownInsCode||marketRow.insCode||null;
+      $("inputSymbol").value=marketRow.symbol||requested;
+      renderSnapshotQuote(marketRow);
+      $("symbol").textContent=(marketRow.symbol||requested)+(marketRow.name?" — "+marketRow.name:"");
+      markFresh("Market Watch",observedTime(watch),feedMode(watch));
+      renderFeedMeta(watch,marketRows);
+      $("status").textContent="نماد پیدا شد • در حال تکمیل اطلاعات";
+      $("statusWrap").className="status online";
+    }
+  }catch(e){}
+  if(!marketRow && !knownInsCode){
+    try{
+      const searchRaw=await BourseAPI.search(requested),matches=BourseMarket.normalizeSearch(searchRaw);
+      const m=matches[0];
+      if(m){
+        currentInsCode=m.insCode;
+        $("inputSymbol").value=m.symbol;
+        $("symbol").textContent=m.symbol+(m.name?" — "+m.name:"");
+        $("status").textContent="نماد پیدا شد • در حال دریافت اطلاعات";
+        $("statusWrap").className="status online";
+      }
+    }catch(e){}
+  }
+  if(!currentInsCode){
+    setStatus("quoteStatus","نماد در Market Watch پیدا نشد",true);
+    $("status").textContent="نماد «"+requested+"» پیدا نشد";
+    $("statusWrap").className="status error";
+    return;
+  }
+  const symbol=$("inputSymbol").value||requested;
+  try{
+    raw=await BourseAPI.history(symbol);
+    const rows=normalize(raw);
+    if(rows.length){
+      render(symbol,rows);
+      $("status").textContent="دریافت موفق • "+rows.length+" رکورد";
+      $("statusWrap").className="status online";
+      loadFlow(symbol);
+    }else{
+      setStatus("flowStatus","تاریخچه این نماد هنوز در دسترس نیست");
+    }
+  }catch(e){
+    setStatus("flowStatus","تاریخچه نماد در دسترس نیست",true);
+  }
+  loadLive(symbol,currentInsCode);
 }
 $("loadBtn").addEventListener("click",load);
 $("inputSymbol").addEventListener("keydown",e=>{if(e.key==="Enter")load()});

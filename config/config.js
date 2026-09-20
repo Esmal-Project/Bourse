@@ -9,5 +9,6 @@ window.BOURSE_CONFIG={
   refreshIntervalMs:5000,
   staleAfterMs:15000,
   snapshotCacheMs:60000,
+  snapshotStaleAfterMs:720000,
   marketWatchFallbackUrl:"https://raw.githubusercontent.com/Esmal-Project/Bourse/main/data/market-watch.json"
 };

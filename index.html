@@ -19,6 +19,7 @@
 <div class="stat"><div class="label">اولین</div><div class="value" id="first">—</div></div>
 <div class="stat"><div class="label">تاریخ آخرین داده</div><div class="value" id="date">—</div></div>
 </section>
+
 <section class="panel analysis-panel">
 <div class="panel-head"><div><div class="panel-title">هسته تحلیل تاریخی</div><div class="muted">محاسبات از داده واقعی تاریخچه؛ بدون سیگنال ساختگی</div></div><div class="analysis-count">رکورد: <span id="analysisCount">—</span></div></div>
 <div class="analysis-grid">
@@ -35,16 +36,32 @@
 </div>
 <div class="table-wrap"><table><thead><tr><th>تاریخ</th><th>قیمت</th><th>تغییر</th><th>حجم</th><th>ارزش</th><th>معامله</th></tr></thead><tbody id="analysisTableBody"></tbody></table></div>
 </section>
+
+<section class="panel flow-panel">
+<div class="panel-head"><div><div class="panel-title">حقیقی / حقوقی تاریخی</div><div class="muted" id="flowStatus">در حال آماده‌سازی...</div></div><div class="analysis-count">آخرین روز: <span id="flowDate">—</span></div></div>
+<div class="analysis-grid flow-grid">
+<div class="analysis-card"><span>خالص خرید حقیقی</span><strong id="netIValue">—</strong></div>
+<div class="analysis-card"><span>خالص خرید حقوقی</span><strong id="netNValue">—</strong></div>
+<div class="analysis-card"><span>قدرت خریدار حقیقی</span><strong id="buyerPower">—</strong></div>
+<div class="analysis-card"><span>خرید حقیقی</span><strong id="buyIValue">—</strong></div>
+<div class="analysis-card"><span>فروش حقیقی</span><strong id="sellIValue">—</strong></div>
+</div></section>
+
 <section class="market-panels">
-<div class="panel market-card"><div class="panel-title">قیمت لحظه‌ای</div><div id="quoteStatus" class="muted">مسیر Quote هنوز به Worker متصل نشده</div></div>
-<div class="panel market-card"><div class="panel-title">دفتر سفارشات</div><div id="orderbookStatus" class="muted">مسیر Order Book هنوز به Worker متصل نشده</div></div>
-<div class="panel market-card"><div class="panel-title">حقیقی / حقوقی</div><div id="clientTypeStatus" class="muted">مسیر Client Type هنوز به Worker متصل نشده</div></div>
+<div class="panel market-card"><div class="panel-title">قیمت لحظه‌ای</div><div id="quoteStatus" class="muted">—</div><div id="quoteDetails" class="quote-details"></div></div>
+<div class="panel market-card orderbook-card"><div class="panel-title">دفتر سفارشات</div><div id="orderbookStatus" class="muted">—</div><div id="orderbook"></div></div>
+<div class="panel market-card"><div class="panel-title">حقیقی / حقوقی لحظه‌ای</div><div id="clientTypeStatus" class="muted">—</div><div id="clientTypeDetails" class="quote-details"></div></div>
 </section>
+
 <section class="panel chart"><canvas id="chart"></canvas></section>
-<section class="panel raw"><div class="label">منبع: <span id="source">—</span></div><div class="label">آخرین داده خام</div><pre id="raw">—</pre></section>
+<section class="panel raw"><div class="label">منبع: <span id="source">—</span></div><div class="label">آخرین داده خام قیمت</div><pre id="raw">—</pre></section>
 </main>
 <script src="config/config.js"></script>
 <script src="modules/api.js"></script>
-<script src="modules/symbol.js"></script><script src="modules/chart.js"></script>
-<script src="modules/market.js"></script><script src="modules/analysis.js"></script><script src="app.js"></script>
+<script src="modules/symbol.js"></script>
+<script src="modules/chart.js"></script>
+<script src="modules/market.js"></script>
+<script src="modules/analysis.js"></script>
+<script src="modules/flow.js"></script>
+<script src="app.js"></script>
 </body></html>

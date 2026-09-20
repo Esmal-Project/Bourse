@@ -1,0 +1,1 @@
+window.BOURSE_CONFIG={worker:"https://brsapi-proxy.yasharesmaeili.workers.dev"};

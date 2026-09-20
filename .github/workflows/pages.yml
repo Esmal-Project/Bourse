@@ -35,3 +35,31 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+  verify-live:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify live site and data
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in {1..12}; do
+            if curl -fsSL --max-time 10 "https://esmal-project.github.io/Bourse/" | grep -q "BOURSE TERMINAL"; then
+              break
+            fi
+            sleep 5
+          done
+          curl -fsSL --max-time 20 "https://esmal-project.github.io/Bourse/app.js" -o /tmp/app.js
+          node --check /tmp/app.js
+          curl -fsSL --max-time 20 "https://esmal-project.github.io/Bourse/data/market-watch.json" -o /tmp/market-watch.json
+          python3 - <<'PY'
+          import json
+          with open("/tmp/market-watch.json", encoding="utf-8") as f:
+              d=json.load(f)
+          rows=d.get("payload",{}).get("marketwatch",[])
+          assert len(rows) >= 1000, f"too few market rows: {len(rows)}"
+          print("LIVE SITE OK; MARKET ROWS:", len(rows))
+          print("FETCHED AT:", d.get("fetchedAt"))
+          print("SOURCE:", d.get("source"))
+          PY

@@ -127,10 +127,10 @@ async function scanMarket(){
     const rawWatch=await BourseAPI.marketWatch();
     const rows=BourseScanHistory.compare(BourseScore.addResearchPriority(BourseScanner.activity(BourseScanner.normalize(rawWatch))));
     if(!rows.length)throw new Error("Market Watch داده‌ای برنگرداند");
-    const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;markFresh("Market Watch",observedTime(rawWatch));
+    const stats=BourseScanner.stats(rows);window.__lastMarketRows=rows;markFresh("Market Watch",observedTime(rawWatch),feedMode(rawWatch));
     window.__scanStats=stats;
     BourseScanHistory.save(rows);
-    renderMarketRows(rows);
+    renderMarketRows(rows);renderFeedMeta(rawWatch,rows);
     setStatus("scanStatus","Market Watch دریافت شد • فیلترها قابل اعمال هستند");
   }catch(e){setStatus("scanStatus","Worker جدید هنوز Deploy نشده یا Market Watch در دسترس نیست",true)}
 }
@@ -167,7 +167,8 @@ function startLiveRefresh(){
       if(rows.length){
         window.__lastMarketRows=rows;
         if(document.getElementById("scanTableBody").children.length||lastDataAt)renderMarketRows(rows);
-        markFresh("Market Watch");
+        markFresh("Market Watch",observedTime(rawWatch),feedMode(rawWatch));
+        renderFeedMeta(rawWatch,rows);
       }
     }catch{}
     finally{refreshing=false;updateFreshness();}

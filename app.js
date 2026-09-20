@@ -1,4 +1,4 @@
-const $=id=>document.getElementById(id);let raw=[];let lastDataAt=0;let refreshTimer=null;let liveTimer=null;let refreshing=false;let liveRefreshing=false;let currentInsCode=null;
+const $=id=>document.getElementById(id);let raw=[];let lastDataAt=0;let refreshTimer=null;let liveTimer=null;let refreshing=false;let liveRefreshing=false;let currentInsCode=null;let currentSymbol="";
 function observedTime(raw){const v=raw?.fetchedAt??raw?.meta?.fetchedAt??raw?.__meta?.fetchedAt;const t=v?Date.parse(v):NaN;return Number.isFinite(t)?t:Date.now()}
 function markFresh(source="market",observedAt=Date.now()){
   lastDataAt=observedAt;
@@ -47,6 +47,7 @@ function renderLive(quote,book,ct){
   }
 }
 async function loadLive(symbol){
+  currentSymbol=symbol;
   try{
     const searchRaw=await BourseAPI.search(symbol),matches=BourseMarket.normalizeSearch(searchRaw);
     if(!matches.length)throw new Error("نماد در TSETMC پیدا نشد");
@@ -153,7 +154,7 @@ setInterval(updateFreshness,1000);
 startLiveRefresh();
 
 async function refreshCurrentLive(){
-  if(liveRefreshing||!currentInsCode||document.hidden)return;
+  if(liveRefreshing||(!currentInsCode&&!currentSymbol)||document.hidden)return;
   liveRefreshing=true;
   try{
     const [q,b,c]=await Promise.all([
@@ -165,7 +166,7 @@ async function refreshCurrentLive(){
     markFresh("Live Quote");
   }catch{
     try{
-      const symbol=BourseSymbol.get();
+      const symbol=currentSymbol||BourseSymbol.get();
       const rows=normalize(await BourseAPI.history(symbol));
       const d=rows.at(-1);
       if(d){

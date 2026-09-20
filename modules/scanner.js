@@ -32,4 +32,28 @@ function scanStats(rows){
     totalValue:rows.reduce((s,r)=>s+(r.value||0),0)
   };
 }
-window.BourseScanner={normalize:normalizeMarketWatch,sort:scanSort,stats:scanStats};
+
+function percentileRanks(rows,key){
+  const vals=rows.map(r=>scanNum(r[key])).filter(v=>v!=null).sort((a,b)=>a-b);
+  if(!vals.length)return new Map();
+  const rank=new Map();
+  rows.forEach(r=>{
+    const v=scanNum(r[key]);
+    if(v==null)return;
+    let lo=0,hi=vals.length;
+    while(lo<hi){const m=(lo+hi)>>1;if(vals[m]<=v)lo=m+1;else hi=m}
+    rank.set(r.insCode,vals.length===1?50:((lo-1)/(vals.length-1))*100);
+  });
+  return rank;
+}
+function addActivityScore(rows){
+  const enriched=[...rows];
+  enriched.forEach(r=>{r.absChange=Math.abs(r.change??0)});
+  const rv=percentileRanks(enriched,"volume"),rt=percentileRanks(enriched,"value"),rn=percentileRanks(enriched,"trades"),rc=percentileRanks(enriched,"absChange");
+  enriched.forEach(r=>{
+    const parts=[rv.get(r.insCode),rt.get(r.insCode),rn.get(r.insCode),rc.get(r.insCode)].filter(Number.isFinite);
+    r.activityScore=parts.length?parts.reduce((x,y)=>x+y,0)/parts.length:null;
+  });
+  return enriched;
+}
+window.BourseScanner={normalize:normalizeMarketWatch,sort:scanSort,stats:scanStats,activity:addActivityScore};

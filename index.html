@@ -19,6 +19,22 @@
 <div class="stat"><div class="label">اولین</div><div class="value" id="first">—</div></div>
 <div class="stat"><div class="label">تاریخ آخرین داده</div><div class="value" id="date">—</div></div>
 </section>
+<section class="panel analysis-panel">
+<div class="panel-head"><div><div class="panel-title">هسته تحلیل تاریخی</div><div class="muted">محاسبات از داده واقعی تاریخچه؛ بدون سیگنال ساختگی</div></div><div class="analysis-count">رکورد: <span id="analysisCount">—</span></div></div>
+<div class="analysis-grid">
+<div class="analysis-card"><span>روند</span><strong id="aTrend">—</strong></div>
+<div class="analysis-card"><span>تغییر روزانه</span><strong id="aDayChange">—</strong></div>
+<div class="analysis-card"><span>بازده ۵ روز</span><strong id="aReturn5">—</strong></div>
+<div class="analysis-card"><span>بازده ۲۰ روز</span><strong id="aReturn20">—</strong></div>
+<div class="analysis-card"><span>میانگین ۵ روز</span><strong id="aMA5">—</strong></div>
+<div class="analysis-card"><span>میانگین ۲۰ روز</span><strong id="aMA20">—</strong></div>
+<div class="analysis-card"><span>نسبت حجم به میانگین</span><strong id="aVolumeRatio">—</strong></div>
+<div class="analysis-card"><span>موقعیت در دامنه ۲۰ روزه</span><strong id="aRangePos">—</strong></div>
+<div class="analysis-card"><span>سقف ۲۰ روز</span><strong id="a20High">—</strong></div>
+<div class="analysis-card"><span>کف ۲۰ روز</span><strong id="a20Low">—</strong></div>
+</div>
+<div class="table-wrap"><table><thead><tr><th>تاریخ</th><th>قیمت</th><th>تغییر</th><th>حجم</th><th>ارزش</th><th>معامله</th></tr></thead><tbody id="analysisTableBody"></tbody></table></div>
+</section>
 <section class="market-panels">
 <div class="panel market-card"><div class="panel-title">قیمت لحظه‌ای</div><div id="quoteStatus" class="muted">مسیر Quote هنوز به Worker متصل نشده</div></div>
 <div class="panel market-card"><div class="panel-title">دفتر سفارشات</div><div id="orderbookStatus" class="muted">مسیر Order Book هنوز به Worker متصل نشده</div></div>
@@ -30,5 +46,5 @@
 <script src="config/config.js"></script>
 <script src="modules/api.js"></script>
 <script src="modules/symbol.js"></script><script src="modules/chart.js"></script>
-<script src="modules/market.js"></script><script src="app.js"></script>
+<script src="modules/market.js"></script><script src="modules/analysis.js"></script><script src="app.js"></script>
 </body></html>

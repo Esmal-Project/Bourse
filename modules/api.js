@@ -1,4 +1,5 @@
 const CONFIG=window.BOURSE_CONFIG||{worker:"https://brsapi-proxy.yasharesmaeili.workers.dev",historyPath:"/tsetmc/history"};
+let marketWatchFallbackCache=null;let marketWatchFallbackAt=0;
 
 function requirePath(name){
   const path=CONFIG[name];
@@ -50,7 +51,11 @@ const API={
     catch(primary){
       const fallback=CONFIG.marketWatchFallbackUrl;
       if(!fallback)throw primary;
-      return requestJson(fallback,"MarketWatch snapshot");
+      const maxAge=CONFIG.snapshotCacheMs??60000;
+      if(marketWatchFallbackCache&&Date.now()-marketWatchFallbackAt<maxAge)return marketWatchFallbackCache;
+      marketWatchFallbackCache=await requestJson(fallback+"?t="+Date.now(),"MarketWatch snapshot");
+      marketWatchFallbackAt=Date.now();
+      return marketWatchFallbackCache;
     }
   }
 };

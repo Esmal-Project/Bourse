@@ -1,16 +1,39 @@
-const $=id=>document.getElementById(id);let raw=[];let lastDataAt=0;let refreshTimer=null;let liveTimer=null;let refreshing=false;let liveRefreshing=false;let currentInsCode=null;let currentSymbol="";
+const $=id=>document.getElementById(id);let raw=[];let lastDataAt=0;let refreshTimer=null;let liveTimer=null;let refreshing=false;let liveRefreshing=false;let currentInsCode=null;let currentSymbol="";let lastDataMode="";
 function observedTime(raw){const v=raw?.fetchedAt??raw?.meta?.fetchedAt??raw?.__meta?.fetchedAt;const t=v?Date.parse(v):NaN;return Number.isFinite(t)?t:Date.now()}
-function markFresh(source="market",observedAt=Date.now()){
-  lastDataAt=observedAt;
+function markFresh(source="market",observedAt=Date.now(),mode="live"){
+  lastDataAt=observedAt;lastDataMode=mode;
   const el=$("freshness");
   if(el){el.textContent="داده: "+source+" • همین الان";el.className="freshness fresh";}
+}
+function feedMode(raw){
+  const s=String(raw?.source||"").toLowerCase();
+  return raw?.viaProxy||s.includes("raw.githubusercontent.com")?"snapshot":"live";
+}
+function feedLabel(raw){
+  if(raw?.viaProxy)return "TSETMC از IP ایران";
+  const s=String(raw?.source||"");
+  if(s.includes("raw.githubusercontent.com"))return "GitHub snapshot";
+  return "TSETMC Worker";
+}
+function formatAge(ms){
+  const sec=Math.max(0,Math.floor(ms/1000));
+  if(sec<60)return sec+" ثانیه";
+  const min=Math.floor(sec/60),rem=sec%60;
+  return rem?min+" دقیقه و "+rem+" ثانیه":min+" دقیقه";
+}
+function renderFeedMeta(raw,rows){
+  const el=$("feedMeta");if(!el)return;
+  const at=observedTime(raw),age=formatAge(Date.now()-at),label=feedLabel(raw),mode=feedMode(raw);
+  const count=Array.isArray(rows)?rows.length:"—"; const suffix=mode==="snapshot"?" • snapshot دوره‌ای":" • فید زنده Worker";
+  el.textContent="فید: "+label+suffix+" • "+count+" نماد • آخرین دریافت "+age+" پیش";
 }
 function updateFreshness(){
   const el=$("freshness");if(!el)return;
   if(!lastDataAt){el.textContent="داده: —";return;}
-  const age=Math.floor((Date.now()-lastDataAt)/1000);
-  el.textContent="داده: "+(age<2?"همین الان":age+" ثانیه پیش");
-  el.className="freshness "+(age*1000>=(window.BOURSE_CONFIG?.staleAfterMs??15000)?"stale":"fresh");
+  const ageMs=Math.max(0,Date.now()-lastDataAt),ageSec=Math.floor(ageMs/1000);
+  const staleMs=lastDataMode==="snapshot"?(window.BOURSE_CONFIG?.snapshotStaleAfterMs??12*60*1000):(window.BOURSE_CONFIG?.staleAfterMs??15000);
+  el.textContent="داده: "+(ageSec<2?"همین الان":formatAge(ageMs)+" پیش");
+  el.className="freshness "+(ageMs>=staleMs?"stale":"fresh");
 }
 function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
 function money(v){return v==null?"—":Number(v).toLocaleString("fa-IR")}
@@ -53,7 +76,7 @@ async function loadLive(symbol){
     if(!matches.length)throw new Error("نماد در TSETMC پیدا نشد");
     const match=matches[0],insCode=match.insCode;currentInsCode=insCode;
     const [q,b,c]=await Promise.all([BourseAPI.quote(insCode),BourseAPI.orderbook(insCode),BourseAPI.clientType(insCode)]);
-    renderLive(BourseMarket.normalizeQuote(q),BourseMarket.normalizeOrderbook(b),BourseMarket.normalizeClientType(c));markFresh("Live");
+    renderLive(BourseMarket.normalizeQuote(q),BourseMarket.normalizeOrderbook(b),BourseMarket.normalizeClientType(c));markFresh("Live",observedTime(q),"live");
     if(match.name) $("symbol").textContent=match.symbol+" — "+match.name;
   }catch(e){
     setStatus("quoteStatus","Worker جدید هنوز Deploy نشده یا TSETMC پاسخ نداد",true);
@@ -163,7 +186,7 @@ async function refreshCurrentLive(){
       BourseAPI.clientType(currentInsCode)
     ]);
     renderLive(BourseMarket.normalizeQuote(q),BourseMarket.normalizeOrderbook(b),BourseMarket.normalizeClientType(c));
-    markFresh("Live Quote");
+    markFresh("Live Quote",observedTime(q),"live");
   }catch{
     try{
       const symbol=currentSymbol||BourseSymbol.get();

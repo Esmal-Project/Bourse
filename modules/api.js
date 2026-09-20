@@ -49,13 +49,19 @@ const API={
   async marketWatch(){
     try{return await requestJson(routeUrl(requirePath("marketWatchPath")),"MarketWatch")}
     catch(primary){
-      const fallback=CONFIG.marketWatchFallbackUrl;
-      if(!fallback)throw primary;
+      const fallbacks=[CONFIG.marketWatchFallbackUrl,CONFIG.marketWatchFallbackUrlSecondary].filter(Boolean);
+      if(!fallbacks.length)throw primary;
       const maxAge=CONFIG.snapshotCacheMs??60000;
       if(marketWatchFallbackCache&&Date.now()-marketWatchFallbackAt<maxAge)return marketWatchFallbackCache;
-      marketWatchFallbackCache=await requestJson(fallback+"?t="+Date.now(),"MarketWatch snapshot");
-      marketWatchFallbackAt=Date.now();
-      return marketWatchFallbackCache;
+      let last=primary;
+      for(const fallback of fallbacks){
+        try{
+          marketWatchFallbackCache=await requestJson(fallback+"?t="+Date.now(),"MarketWatch snapshot");
+          marketWatchFallbackAt=Date.now();
+          return marketWatchFallbackCache;
+        }catch(error){last=error;}
+      }
+      throw last;
     }
   }
 };

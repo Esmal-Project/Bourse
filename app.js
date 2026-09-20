@@ -69,6 +69,34 @@ function renderLive(quote,book,ct){
     ].map(x=>"<div class=\"quote-item\"><span>"+x[0]+"</span><strong>"+x[1]+"</strong></div>").join("");
   }
 }
+function renderSnapshotQuote(row){
+  if(!row)return false;
+  $("price").textContent=money(row.last??row.close);
+  $("change").textContent=row.change==null?"—":signed(row.change)+"%";
+  $("change").className="change "+(row.change==null?"":row.change>=0?"positive":"negative");
+  $("volume").textContent=money(row.volume);$("trades").textContent=money(row.trades);$("value").textContent=money(row.value);
+  $("min").textContent=money(row.min);$("max").textContent=money(row.max);$("yesterday").textContent=money(row.yesterday);
+  $("date").textContent="Market Watch";
+  setStatus("quoteStatus","Market Watch snapshot • آخرین/پایانی بازار");
+  $("quoteDetails").innerHTML=[
+    ["آخرین",money(row.last)],["پایانی",money(row.close)],["حجم",money(row.volume)],["تعداد معامله",money(row.trades)]
+  ].map(x=>"<div class=\"quote-item\"><span>"+x[0]+"</span><strong>"+x[1]+"</strong></div>").join("");
+  return true;
+}
+async function loadSnapshotQuote(symbol){
+  try{
+    const rawWatch=await BourseAPI.marketWatch();
+    const rows=BourseScanner.normalize(rawWatch);
+    const row=rows.find(x=>x.symbol===symbol);
+    if(!row)return false;
+    renderSnapshotQuote(row);
+    setStatus("orderbookStatus","دفتر سفارشات لحظه‌ای Worker در دسترس نیست",true);
+    setStatus("clientTypeStatus","حقیقی/حقوقی لحظه‌ای Worker در دسترس نیست",true);
+    markFresh("Market Watch",observedTime(rawWatch),feedMode(rawWatch));
+    renderFeedMeta(rawWatch,rows);
+    return true;
+  }catch{return false}
+}
 async function loadLive(symbol){
   currentSymbol=symbol;
   try{
@@ -79,9 +107,11 @@ async function loadLive(symbol){
     renderLive(BourseMarket.normalizeQuote(q),BourseMarket.normalizeOrderbook(b),BourseMarket.normalizeClientType(c));markFresh("Live",observedTime(q),"live");
     if(match.name) $("symbol").textContent=match.symbol+" — "+match.name;
   }catch(e){
-    setStatus("quoteStatus","Worker جدید هنوز Deploy نشده یا TSETMC پاسخ نداد",true);
-    setStatus("orderbookStatus","Worker جدید هنوز Deploy نشده یا TSETMC پاسخ نداد",true);
-    setStatus("clientTypeStatus","Worker جدید هنوز Deploy نشده یا TSETMC پاسخ نداد",true);
+    if(!(await loadSnapshotQuote(symbol))){
+      setStatus("quoteStatus","فید لحظه‌ای در دسترس نیست",true);
+      setStatus("orderbookStatus","دفتر سفارشات در دسترس نیست",true);
+      setStatus("clientTypeStatus","حقیقی/حقوقی لحظه‌ای در دسترس نیست",true);
+    }
   }
 }
 async function loadFlow(symbol){
@@ -189,6 +219,7 @@ async function refreshCurrentLive(){
     renderLive(BourseMarket.normalizeQuote(q),BourseMarket.normalizeOrderbook(b),BourseMarket.normalizeClientType(c));
     markFresh("Live Quote",observedTime(q),"live");
   }catch{
+    if(await loadSnapshotQuote(currentSymbol||BourseSymbol.get()))return;
     try{
       const symbol=currentSymbol||BourseSymbol.get();
       const rows=normalize(await BourseAPI.history(symbol));

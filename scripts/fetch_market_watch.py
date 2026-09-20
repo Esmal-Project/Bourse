@@ -58,15 +58,59 @@ def proxy_list():
     except Exception:
         return []
 
-sources=[("direct",t,None) for t in TARGETS]
-proxies=[p for p in KNOWN_PROXIES if p]
-proxies += [p for p in proxy_list() if p not in proxies]
-random.shuffle(proxies[1:])
+sources=[("known",t,p) for p in KNOWN_PROXIES for t in TARGETS[:2]]
+sources += [("direct",t,None) for t in TARGETS]
+last=None
+for label,url,proxy in sources:
+    try:
+        status,body,ctype=get(url,proxy=proxy)
+        payload=parse_payload(url,body,ctype)
+        if payload:
+            out={
+                "fetchedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "source":label+" -> "+url,
+                "viaProxy":bool(proxy),
+                "payload":payload
+            }
+            os.makedirs("data",exist_ok=True)
+            with open("data/market-watch.json","w",encoding="utf-8") as f:
+                json.dump(out,f,ensure_ascii=False,separators=(",",":"))
+            rows=payload.get("marketwatch",[])
+            meta={"fetchedAt":out["fetchedAt"],"source":label+" -> "+url,"viaProxy":bool(proxy),"rowCount":len(rows),"symbols":[{"symbol":x.get("lva") or x.get("symbol"),"name":x.get("lvc") or x.get("name"),"insCode":x.get("insCode")} for x in rows[:50]]}
+            with open("data/market-watch-meta.json","w",encoding="utf-8") as f:
+                json.dump(meta,f,ensure_ascii=False,separators=(",",":"))
+            print("SUCCESS",label,"rows=",len(rows))
+            raise SystemExit(0)
+        last=f"{label}: invalid payload"
+    except Exception as e:
+        last=f"{label}: {type(e).__name__}: {e}"
+
+# Known relay failed; only then pay the cost of discovering more proxies.
+proxies=proxy_list()
+random.shuffle(proxies)
 for p in proxies:
     for target in TARGETS[:2]:
-        sources.append((p,target,p))
-
-last=None
+        try:
+            status,body,ctype=get(target,proxy=p)
+            payload=parse_payload(target,body,ctype)
+            if payload:
+                out={
+                    "fetchedAt":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    "source":p+" -> "+target,
+                    "viaProxy":True,
+                    "payload":payload
+                }
+                os.makedirs("data",exist_ok=True)
+                with open("data/market-watch.json","w",encoding="utf-8") as f:
+                    json.dump(out,f,ensure_ascii=False,separators=(",",":"))
+                rows=payload.get("marketwatch",[])
+                meta={"fetchedAt":out["fetchedAt"],"source":p+" -> "+target,"viaProxy":True,"rowCount":len(rows),"symbols":[{"symbol":x.get("lva") or x.get("symbol"),"name":x.get("lvc") or x.get("name"),"insCode":x.get("insCode")} for x in rows[:50]]}
+                with open("data/market-watch-meta.json","w",encoding="utf-8") as f:
+                    json.dump(meta,f,ensure_ascii=False,separators=(",",":"))
+                print("SUCCESS",p,"rows=",len(rows))
+                raise SystemExit(0)
+        except Exception as e:
+            last=f"{p}: {type(e).__name__}: {e}"
 for label,url,proxy in sources:
     try:
         status,body,ctype=get(url,proxy=proxy)

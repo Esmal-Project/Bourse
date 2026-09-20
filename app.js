@@ -289,7 +289,7 @@ async function load(inputSymbol=null,knownInsCode=null){
   }
   loadLive(symbol,currentInsCode);
 }
-$("loadBtn").addEventListener("click",load);
+$("loadBtn").addEventListener("click",()=>load());
 $("inputSymbol").addEventListener("keydown",e=>{if(e.key==="Enter")load()});
 $("scanBtn").addEventListener("click",scanMarket);
 $("scanSort").addEventListener("change",()=>{if(window.__lastMarketRows)renderMarketRows(window.__lastMarketRows)});

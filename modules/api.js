@@ -27,20 +27,21 @@ const API={
   worker:CONFIG.worker,
   historyPath:CONFIG.historyPath||"/tsetmc/history",
   async history(symbol){
-    const data=await requestJson(routeUrl(this.historyPath,{symbol}),"History");
+    const data=await requestJson(routeUrl(this.historyPath,{symbol,type:0}),"History");
     if(Array.isArray(data))return data;
     if(Array.isArray(data.data))return data.data;
     if(Array.isArray(data.result))return data.result;
     throw new Error("ساختار پاسخ تاریخچه ناشناخته است");
   },
   async clientHistory(symbol){
-    const data=await requestJson(routeUrl(requirePath("clientHistoryPath"),{symbol}),"Client history");
+    const data=await requestJson(routeUrl(this.historyPath,{symbol,type:1}),"Client history");
     if(Array.isArray(data))return data;
     if(Array.isArray(data.data))return data.data;
     if(Array.isArray(data.result))return data.result;
     if(Array.isArray(data.clientTypeHistory))return data.clientTypeHistory;
     throw new Error("ساختار پاسخ تاریخچه حقیقی/حقوقی ناشناخته است");
   },
+  async search(query){return requestJson(routeUrl(requirePath("searchPath"),{query}),"Symbol search")},
   async quote(insCode){return requestJson(routeUrl(requirePath("quotePath"),{insCode}),"Quote")},
   async orderbook(insCode){return requestJson(routeUrl(requirePath("orderbookPath"),{insCode}),"Orderbook")},
   async clientType(insCode){return requestJson(routeUrl(requirePath("clientTypePath"),{insCode}),"ClientType")},

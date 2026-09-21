@@ -2,135 +2,71 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Yasham — Iran Market Intelligence</title><link rel="stylesheet" href="style.css">
+<meta name="theme-color" content="#060b18">
+<title>Yasham — Iran Market Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=20260921">
 </head>
 <body>
 <div class="boot-screen" aria-hidden="true"><div class="boot-grid"></div><div class="boot-glow"></div><div class="boot-content"><div class="boot-mark">◈</div><div class="boot-title">YASHAM</div><div class="boot-sub">IRAN MARKET INTELLIGENCE</div><div class="boot-line"></div><div class="boot-status"></div><div class="boot-bar"><i></i></div></div></div>
 <main class="app">
-<header class="topbar"><div class="brand">YASHAM</div><div id="statusWrap" class="status"><span class="dot"></span><span id="status">آماده</span><span id="freshness" class="freshness">داده: —</span></div></header>
-<section class="search"><input id="inputSymbol" value="" placeholder="جستجوی نماد در کل بازار..."><button id="loadBtn">نمایش نماد</button></section>
-<section class="hero"><div class="symbol" id="symbol">داشبورد کل بازار</div><div class="price" id="price">—</div><div id="change" class="change">در حال دریافت Market Watch...</div></section>
-<section class="grid">
-<div class="stat"><div class="label">حجم معاملات</div><div class="value" id="volume">—</div></div>
-<div class="stat"><div class="label">تعداد معاملات</div><div class="value" id="trades">—</div></div>
-<div class="stat"><div class="label">ارزش معاملات</div><div class="value" id="value">—</div></div>
-<div class="stat"><div class="label">دیروز</div><div class="value" id="yesterday">—</div></div>
-<div class="stat"><div class="label">حداقل</div><div class="value" id="min">—</div></div>
-<div class="stat"><div class="label">حداکثر</div><div class="value" id="max">—</div></div>
-<div class="stat"><div class="label">اولین</div><div class="value" id="first">—</div></div>
-<div class="stat"><div class="label">تاریخ آخرین داده</div><div class="value" id="date">—</div></div>
+<header class="topbar"><div class="brand-block"><div class="brand">YASHAM</div><div class="brand-sub">هوش بازار سرمایه ایران</div></div><div class="market-status"><span class="dot"></span><span id="status">آماده</span><span id="freshness" class="freshness">داده: —</span></div></header>
+
+<section class="command-bar"><div class="search"><span class="search-icon">⌕</span><input id="inputSymbol" placeholder="نماد، نام شرکت یا کد معاملاتی را جستجو کنید…"><button id="loadBtn">نمایش</button></div><div class="command-hint">برای جستجو Enter بزنید</div></section>
+
+<section class="market-strip">
+<div class="market-intro"><span class="eyebrow">MARKET OVERVIEW</span><strong>نمای کلی بازار</strong><span class="muted">داده از Market Watch واقعی</span></div>
+<div class="market-stat"><span>وضعیت</span><strong id="symbol">کل بازار</strong></div>
+<div class="market-stat"><span>تعداد</span><strong id="price">—</strong></div>
+<div class="market-stat"><span>حرکت بازار</span><strong id="change">در حال دریافت…</strong></div>
 </section>
 
-<section class="panel analysis-panel">
-<div class="panel-head"><div><div class="panel-title">هسته تحلیل تاریخی</div><div class="muted">محاسبات از داده واقعی تاریخچه؛ بدون سیگنال ساختگی</div></div><div class="analysis-count">رکورد: <span id="analysisCount">—</span></div></div>
-<div class="analysis-grid">
-<div class="analysis-card"><span>روند</span><strong id="aTrend">—</strong></div>
-<div class="analysis-card"><span>تغییر روزانه</span><strong id="aDayChange">—</strong></div>
-<div class="analysis-card"><span>بازده ۵ روز</span><strong id="aReturn5">—</strong></div>
-<div class="analysis-card"><span>بازده ۲۰ روز</span><strong id="aReturn20">—</strong></div>
-<div class="analysis-card"><span>میانگین ۵ روز</span><strong id="aMA5">—</strong></div>
-<div class="analysis-card"><span>میانگین ۲۰ روز</span><strong id="aMA20">—</strong></div>
-<div class="analysis-card"><span>نسبت حجم به میانگین</span><strong id="aVolumeRatio">—</strong></div>
-<div class="analysis-card"><span>موقعیت در دامنه ۲۰ روزه</span><strong id="aRangePos">—</strong></div>
-<div class="analysis-card"><span>سقف ۲۰ روز</span><strong id="a20High">—</strong></div>
-<div class="analysis-card"><span>کف ۲۰ روز</span><strong id="a20Low">—</strong></div>
-</div>
-<div class="table-wrap"><table><thead><tr><th>تاریخ</th><th>قیمت</th><th>تغییر</th><th>حجم</th><th>ارزش</th><th>معامله</th></tr></thead><tbody id="analysisTableBody"></tbody></table></div>
-</section>
+<section class="workspace">
+<aside class="watch-panel panel">
+<div class="panel-head compact"><div><div class="eyebrow">MARKET SCANNER</div><div class="panel-title">دیده‌بان بازار</div></div><button id="scanBtn" class="ghost-btn">بروزرسانی</button></div>
+<div class="watch-copy"><div class="watch-icon">◉</div><strong>رصد لحظه‌ای کل بازار</strong><p>از جدول تحلیل پایین برای مرتب‌سازی، فیلتر و انتخاب هر نماد استفاده کنید.</p></div>
+<div class="watch-kpis"><div><span>فید بازار</span><strong id="watchFeedState">—</strong></div><div><span>تعداد نماد</span><strong id="watchCount">—</strong></div><div><span>مثبت</span><strong id="watchPositive">—</strong></div><div><span>منفی</span><strong id="watchNegative">—</strong></div></div>
+<div class="watch-summary" id="scanSummary"></div>
+<div class="watch-footer"><span id="scanStatus">آماده اسکن بازار</span><span id="feedMeta">فید: —</span></div>
+</aside>
 
-<section class="panel flow-panel">
-<div class="panel-head"><div><div class="panel-title">حقیقی / حقوقی تاریخی</div><div class="muted" id="flowStatus">در حال آماده‌سازی...</div></div><div class="analysis-count">آخرین روز: <span id="flowDate">—</span></div></div>
-<div class="analysis-grid flow-grid">
-<div class="analysis-card"><span>خالص خرید حقیقی</span><strong id="netIValue">—</strong></div>
-<div class="analysis-card"><span>خالص خرید حقوقی</span><strong id="netNValue">—</strong></div>
-<div class="analysis-card"><span>قدرت خریدار حقیقی</span><strong id="buyerPower">—</strong></div>
-<div class="analysis-card"><span>خرید حقیقی</span><strong id="buyIValue">—</strong></div>
-<div class="analysis-card"><span>فروش حقیقی</span><strong id="sellIValue">—</strong></div>
+<section class="center-panel">
+<div class="selected-head panel"><div><span class="eyebrow">SELECTED SYMBOL</span><div class="selected-symbol" id="selectedLabel">نماد انتخاب نشده</div></div><div class="selected-price"><strong id="selectedPrice">—</strong><span id="selectedChange">—</span></div></div>
+
+<section class="panel chart-panel"><div class="panel-head compact"><div><div class="eyebrow">PRICE HISTORY</div><div class="panel-title">نمودار و رفتار قیمت</div></div><span class="section-note">تاریخچه واقعی</span></div><div class="chart"><canvas id="chart"></canvas></div></section>
+
+<section class="panel stats-panel"><div class="panel-head compact"><div><div class="eyebrow">QUOTE SNAPSHOT</div><div class="panel-title">اطلاعات معاملاتی</div></div></div>
+<div class="grid">
+<div class="stat"><div class="label">حجم معاملات</div><div class="value" id="volume">—</div></div><div class="stat"><div class="label">تعداد معاملات</div><div class="value" id="trades">—</div></div><div class="stat"><div class="label">ارزش معاملات</div><div class="value" id="value">—</div></div><div class="stat"><div class="label">دیروز</div><div class="value" id="yesterday">—</div></div><div class="stat"><div class="label">حداقل</div><div class="value" id="min">—</div></div><div class="stat"><div class="label">حداکثر</div><div class="value" id="max">—</div></div><div class="stat"><div class="label">اولین</div><div class="value" id="first">—</div></div><div class="stat"><div class="label">آخرین داده</div><div class="value" id="date">—</div></div>
 </div></section>
 
-<section class="panel scanner-panel"><div class="panel-head"><div><div class="panel-title">Market Watch — کل بورس</div><div class="muted" id="scanStatus">آماده اسکن بازار</div><div class="muted feed-meta" id="feedMeta">فید: —</div></div><div class="filter-controls"><select id="scanPreset"><option value="">همه نمادها</option><option value="active">فعالیت غیرعادی</option><option value="momentum">رشد + فعالیت</option><option value="weak">افت + فعالیت</option><option value="highValue">ارزش معاملات بالا</option></select><input id="minActivity" type="number" min="0" max="100" placeholder="حداقل فعالیت"><input id="minChange" type="number" step="0.1" placeholder="حداقل تغییر %"><input id="maxChange" type="number" step="0.1" placeholder="حداکثر تغییر %"><input id="minValue" type="number" min="0" placeholder="حداقل ارزش"><input id="scanQuery" type="search" placeholder="فیلتر نماد..."><button id="applyFiltersBtn" class="scan-btn">اعمال فیلتر</button></div><div class="scan-controls"><select id="scanSort"><option value="change">بیشترین رشد</option><option value="value">بیشترین ارزش</option><option value="volume">بیشترین حجم</option><option value="trades">بیشترین تعداد معامله</option><option value="activityScore">شاخص فعالیت غیرعادی</option><option value="researchPriority">اولویت بررسی</option><option value="changeAsc">بیشترین افت</option></select><button id="scanBtn" class="scan-btn">اسکن کل بازار</button></div></div><div class="scan-summary" id="scanSummary"></div><div class="table-wrap"><table><thead><tr><th>نماد</th><th>اولین</th><th>آخرین</th><th>پایانی</th><th>دیروز</th><th>تغییر</th><th>حجم</th><th>ارزش</th><th>معاملات</th><th>حداقل</th><th>حداکثر</th><th>فعالیت</th><th>اولویت</th><th>تغییر اولویت</th></tr></thead><tbody id="scanTableBody"></tbody></table></div></section>
-<section class="market-panels">
-<div class="panel market-card"><div class="panel-title">قیمت لحظه‌ای</div><div id="quoteStatus" class="muted">—</div><div id="quoteDetails" class="quote-details"></div></div>
-<div class="panel market-card orderbook-card"><div class="panel-title">دفتر سفارشات</div><div id="orderbookStatus" class="muted">—</div><div id="orderbook"></div></div>
-<div class="panel market-card"><div class="panel-title">حقیقی / حقوقی لحظه‌ای</div><div id="clientTypeStatus" class="muted">—</div><div id="clientTypeDetails" class="quote-details"></div></div>
+<section class="panel analysis-panel"><div class="panel-head compact"><div><div class="eyebrow">RESEARCH</div><div class="panel-title">هسته تحلیل تاریخی</div><div class="muted">محاسبات از داده واقعی تاریخچه؛ بدون سیگنال ساختگی</div></div><div class="analysis-count">رکورد: <span id="analysisCount">—</span></div></div>
+<div class="analysis-grid">
+<div class="analysis-card"><span>روند</span><strong id="aTrend">—</strong></div><div class="analysis-card"><span>تغییر روزانه</span><strong id="aDayChange">—</strong></div><div class="analysis-card"><span>بازده ۵ روز</span><strong id="aReturn5">—</strong></div><div class="analysis-card"><span>بازده ۲۰ روز</span><strong id="aReturn20">—</strong></div><div class="analysis-card"><span>میانگین ۵ روز</span><strong id="aMA5">—</strong></div><div class="analysis-card"><span>میانگین ۲۰ روز</span><strong id="aMA20">—</strong></div><div class="analysis-card"><span>نسبت حجم به میانگین</span><strong id="aVolumeRatio">—</strong></div><div class="analysis-card"><span>موقعیت در دامنه ۲۰ روزه</span><strong id="aRangePos">—</strong></div><div class="analysis-card"><span>سقف ۲۰ روز</span><strong id="a20High">—</strong></div><div class="analysis-card"><span>کف ۲۰ روز</span><strong id="a20Low">—</strong></div>
+</div><details class="data-details"><summary>جدول تاریخچه قیمت</summary><div class="table-wrap"><table><thead><tr><th>تاریخ</th><th>قیمت</th><th>تغییر</th><th>حجم</th><th>ارزش</th><th>معامله</th></tr></thead><tbody id="analysisTableBody"></tbody></table></div></details></section>
 </section>
 
-<section class="panel chart"><canvas id="chart"></canvas></section>
-<section class="panel raw"><div class="label">منبع: <span id="source">—</span></div><div class="label">آخرین داده خام قیمت</div><pre id="raw">—</pre></section>
+<aside class="right-panel">
+<section class="panel quote-card"><div class="panel-head compact"><div><div class="eyebrow">LIVE QUOTE</div><div class="panel-title">قیمت لحظه‌ای</div></div><span id="quoteStatus" class="live-badge">—</span></div><div id="quoteDetails" class="quote-details"></div></section>
+<section class="panel order-card"><div class="panel-head compact"><div><div class="eyebrow">ORDER BOOK</div><div class="panel-title">دفتر سفارشات</div></div></div><div id="orderbookStatus" class="muted">—</div><div id="orderbook"></div></section>
+<section class="panel flow-card"><div class="panel-head compact"><div><div class="eyebrow">OWNERSHIP FLOW</div><div class="panel-title">حقیقی / حقوقی</div></div><span id="flowDate" class="section-note">—</span></div><div id="clientTypeStatus" class="muted">—</div><div id="clientTypeDetails" class="quote-details"></div>
+<div class="flow-history"><div class="mini-metric"><span>خالص خرید حقیقی</span><strong id="netIValue">—</strong></div><div class="mini-metric"><span>قدرت خریدار</span><strong id="buyerPower">—</strong></div><div class="mini-metric"><span>خرید حقیقی</span><strong id="buyIValue">—</strong></div><div class="mini-metric"><span>فروش حقیقی</span><strong id="sellIValue">—</strong></div><div class="mini-metric"><span>خالص خرید حقوقی</span><strong id="netNValue">—</strong></div></div><div id="flowStatus" class="muted flow-status">در حال آماده‌سازی…</div></section>
+</aside>
+</section>
+
+<section class="panel advanced-scanner"><div class="panel-head"><div><div class="eyebrow">ADVANCED SCANNER</div><div class="panel-title">فیلتر و غربال‌گری کل بازار</div><div class="muted">تا ۸۰۰ نماد نمایش داده می‌شود؛ انتخاب هر ردیف، صفحه نماد را باز می‌کند.</div></div>
+<div class="filter-controls"><select id="scanPreset"><option value="">همه نمادها</option><option value="active">فعالیت غیرعادی</option><option value="momentum">رشد + فعالیت</option><option value="weak">افت + فعالیت</option><option value="highValue">ارزش معاملات بالا</option></select><input id="minActivity" type="number" min="0" max="100" placeholder="حداقل فعالیت"><input id="minChange" type="number" step="0.1" placeholder="حداقل تغییر %"><input id="maxChange" type="number" step="0.1" placeholder="حداکثر تغییر %"><input id="minValue" type="number" min="0" placeholder="حداقل ارزش"><input id="scanQuery" type="search" placeholder="فیلتر نماد…"><button id="applyFiltersBtn" class="scan-btn">اعمال فیلتر</button></div></div>
+<div class="table-wrap advanced-table"><table><thead><tr><th>نماد</th><th>اولین</th><th>آخرین</th><th>پایانی</th><th>دیروز</th><th>تغییر</th><th>حجم</th><th>ارزش</th><th>معاملات</th><th>حداقل</th><th>حداکثر</th><th>فعالیت</th><th>اولویت</th><th>تغییر اولویت</th></tr></thead><tbody id="scanTableBody"></tbody></table></div></section>
+
+<section class="panel raw"><details><summary>داده خام و منبع</summary><div class="raw-grid"><div>منبع: <span id="source">—</span></div><div>آخرین داده خام قیمت</div></div><pre id="raw">—</pre></details></section>
 </main>
-<script src="config/config.js?v=b0fd1008"></script>
-<script src="modules/api.js?v=b0fd1008"></script>
-<script src="modules/symbol.js?v=b0fd1008"></script>
-<script src="modules/chart.js?v=b0fd1008"></script>
-<script src="modules/market.js?v=b0fd1008"></script>
-<script src="modules/analysis.js?v=b0fd1008"></script>
-<script src="modules/flow.js?v=b0fd1008"></script><script src="modules/scanner.js?v=b0fd1008"></script><script src="modules/scan-history.js?v=b0fd1008"></script><script src="modules/filters.js?v=b0fd1008"></script><script src="modules/score.js?v=b0fd1008"></script>
+<script src="config/config.js?v=b0fd1008"></script><script src="modules/api.js?v=b0fd1008"></script><script src="modules/symbol.js?v=b0fd1008"></script><script src="modules/chart.js?v=b0fd1008"></script><script src="modules/market.js?v=b0fd1008"></script><script src="modules/analysis.js?v=b0fd1008"></script><script src="modules/flow.js?v=b0fd1008"></script><script src="modules/scanner.js?v=b0fd1008"></script><script src="modules/scan-history.js?v=b0fd1008"></script><script src="modules/filters.js?v=b0fd1008"></script><script src="modules/score.js?v=b0fd1008"></script><script src="app.js?v=a6769e5d"></script>
 <script>
 (function(){
-  async function emergencyMarketBootstrap(){
-    try{
-      if(!window.fetch)return;
-      var res=await fetch("./data/market-watch.json?t="+Date.now(),{cache:"no-store"});
-      if(!res.ok)throw new Error("snapshot HTTP "+res.status);
-      var raw=await res.json();
-      var rows=((raw&&raw.payload&&raw.payload.marketwatch)||[]).filter(function(r){return r&&r.insCode&&r.lva;});
-      if(!rows.length)throw new Error("snapshot empty");
-      function n(v){var x=Number(v);return Number.isFinite(x)?x:null}
-      function esc(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
-      function money(v){return n(v)==null?"—":n(v).toLocaleString("fa-IR")}
-      function change(r){
-        var last=n(r.pdv),py=n(r.py),pc=n(r.pc);
-        if(pc!=null&&py) return pc/py*100;
-        return last!=null&&py?((last-py)/py)*100:null;
-      }
-      rows=rows.map(function(r){
-        return {
-          insCode:r.insCode,symbol:r.lva,name:r.lvc||"",first:n(r.pf),last:n(r.pdv),close:n(r.pcl),
-          yesterday:n(r.py),change:change(r),volume:n(r.tvol),value:n(r.tval),trades:n(r.ztt),min:n(r.pmn),max:n(r.pmx)
-        };
-      });
-      var pos=rows.filter(function(r){return r.change>0}).length;
-      var neg=rows.filter(function(r){return r.change<0}).length;
-      var flat=rows.length-pos-neg;
-      var totalValue=rows.reduce(function(s,r){return s+(r.value||0)},0);
-      var price=document.getElementById("price");
-      if(price)price.textContent=rows.length.toLocaleString("fa-IR")+" نماد";
-      var symbol=document.getElementById("symbol");
-      if(symbol)symbol.textContent="داشبورد کل بازار";
-      var ch=document.getElementById("change");
-      if(ch)ch.textContent="مثبت "+pos.toLocaleString("fa-IR")+" • منفی "+neg.toLocaleString("fa-IR")+" • بدون تغییر "+flat.toLocaleString("fa-IR");
-      var summary=document.getElementById("scanSummary");
-      if(summary)summary.innerHTML=[
-        ["نمادهای دریافتی",rows.length],["مثبت",pos],["منفی",neg],["بدون تغییر",flat],["ارزش کل",totalValue.toLocaleString("fa-IR")]
-      ].map(function(x){return '<span class="scan-pill"><span class="muted">'+x[0]+'</span> <strong>'+x[1]+"</strong></span>"}).join("");
-      var body=document.getElementById("scanTableBody");
-      if(body){
-        var top=rows.slice().sort(function(a,b){return (b.change??-Infinity)-(a.change??-Infinity)}).slice(0,800);
-        body.innerHTML=top.map(function(r){
-          var cls=r.change==null?"":r.change>=0?"positive":"negative";
-          return '<tr class="scan-row" data-symbol="'+encodeURIComponent(r.symbol||"")+'" data-inscode="'+esc(r.insCode)+'">'+
-            '<td><strong>'+esc(r.symbol)+'</strong><div class="muted">'+esc(r.name)+'</div></td>'+
-            "<td>"+money(r.first)+"</td><td>"+money(r.last)+"</td><td>"+money(r.close)+"</td><td>"+money(r.yesterday)+"</td>"+
-            '<td class="'+cls+'">'+(r.change==null?"—":(r.change>=0?"+":"")+r.change.toFixed(2))+"%</td>"+
-            "<td>"+money(r.volume)+"</td><td>"+money(r.value)+"</td><td>"+money(r.trades)+"</td><td>"+money(r.min)+"</td><td>"+money(r.max)+"</td>"+
-            "<td>—</td><td>—</td><td>—</td></tr>";
-        }).join("");
-      }
-      var meta=document.getElementById("feedMeta");
-      if(meta)meta.textContent="فید: GitHub snapshot • "+rows.length.toLocaleString("fa-IR")+" نماد • آخرین دریافت "+(raw.fetchedAt||"—");
-      var status=document.getElementById("scanStatus");
-      if(status)status.textContent="Market Watch دریافت شد • "+rows.length.toLocaleString("fa-IR")+" نماد • fallback مستقیم";
-      var freshness=document.getElementById("freshness");
-      if(freshness)freshness.textContent="داده: snapshot دوره‌ای";
-    }catch(e){
-      var status=document.getElementById("scanStatus");
-      if(status)status.textContent="خطای دریافت Market Watch: "+e.message;
-      var st=document.getElementById("status");
-      if(st)st.textContent="خطای دریافت داده";
-    }
-  }
-  setTimeout(emergencyMarketBootstrap,1200);
+ const sync=()=>{const s=document.getElementById("symbol"),p=document.getElementById("price"),c=document.getElementById("change");const a=document.getElementById("selectedLabel"),b=document.getElementById("selectedPrice"),d=document.getElementById("selectedChange");if(a&&s)a.textContent=s.textContent||"کل بازار";if(b&&p)b.textContent=p.textContent||"—";if(d&&c){d.textContent=c.textContent||"—";d.className=c.className.includes("negative")?"negative":c.className.includes("positive")?"positive":""}const rows=document.querySelectorAll("#scanTableBody .scan-row");const wc=document.getElementById("watchCount");if(wc)wc.textContent=rows.length?rows.length.toLocaleString("fa-IR"):"—";};
+ new MutationObserver(sync).observe(document.body,{subtree:true,childList:true,characterData:true});setTimeout(sync,700);
 })();
 </script>
-<script src="app.js?v=a6769e5d"></script>
 </body></html>

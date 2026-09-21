@@ -1,4 +1,5 @@
 name: Market Stream Relay
+# persistent collector loop
 
 on:
   push:

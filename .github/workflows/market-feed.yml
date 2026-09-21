@@ -36,10 +36,16 @@ jobs:
         run: |
           git config user.name "bourse-market-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp data/market-watch.json /tmp/market-watch.json
+          cp data/market-watch-meta.json /tmp/market-watch-meta.json
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/market-watch.json data/market-watch.json
+          cp /tmp/market-watch-meta.json data/market-watch-meta.json
           git add data/market-watch.json data/market-watch-meta.json
           if git diff --cached --quiet; then
             echo "No change"
             exit 0
           fi
           git commit -m "chore: update market data [skip ci]"
-          git push
+          git push origin HEAD:main

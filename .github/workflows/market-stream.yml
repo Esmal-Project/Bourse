@@ -1,0 +1,55 @@
+name: Market Stream Relay
+
+on:
+  push:
+    paths:
+      - ".github/workflows/market-stream.yml"
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-stream-relay
+  cancel-in-progress: false
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 58
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run continuous market relay
+        shell: bash
+        run: |
+          set -euo pipefail
+          end=$(( $(date +%s) + 3300 ))
+          while [ "$(date +%s)" -lt "$end" ]; do
+            echo "=== MARKET RELAY $(date -u +%FT%TZ) ==="
+
+            rm -f data/market-watch.json data/market-watch-meta.json
+            python3 scripts/fetch_market_watch.py
+
+            cp data/market-watch.json /tmp/market-watch.json
+            cp data/market-watch-meta.json /tmp/market-watch-meta.json
+
+            git fetch origin main
+            git reset --hard origin/main
+            cp /tmp/market-watch.json data/market-watch.json
+            cp /tmp/market-watch-meta.json data/market-watch-meta.json
+
+            git add data/market-watch.json data/market-watch-meta.json
+            if git diff --cached --quiet; then
+              echo "No market-data change"
+            else
+              git commit -m "chore: stream market data [skip ci]"
+              git push origin HEAD:main
+            fi
+
+            echo "Sleeping 180 seconds..."
+            sleep 180
+          done

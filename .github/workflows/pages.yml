@@ -45,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           for i in {1..12}; do
-            if curl -fsSL --max-time 10 "https://esmal-project.github.io/Bourse/" | grep -q "BOURSE TERMINAL"; then
+            if curl -fsSL --max-time 10 "https://esmal-project.github.io/Bourse/" | grep -q "YASHAM"; then
               break
             fi
             sleep 5

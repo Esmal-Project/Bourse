@@ -1,0 +1,42 @@
+name: Market Data Relay 02
+
+on:
+  schedule:
+    - cron: "0-59/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-data-relay-v2
+  cancel-in-progress: false
+
+jobs:
+  fetch-market:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fetch TSETMC market watch
+        run: python3 scripts/fetch_market_watch.py
+
+      - name: Publish snapshot
+        run: |
+          git config user.name "bourse-market-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp data/market-watch.json /tmp/market-watch.json
+          cp data/market-watch-meta.json /tmp/market-watch-meta.json
+          git fetch origin main
+          git reset --hard origin/main
+          cp /tmp/market-watch.json data/market-watch.json
+          cp /tmp/market-watch-meta.json data/market-watch-meta.json
+          git add data/market-watch.json data/market-watch-meta.json
+          if git diff --cached --quiet; then
+            echo "No change"
+            exit 0
+          fi
+          git commit -m "chore: update market data [skip ci]"
+          git push origin HEAD:main

@@ -10,6 +10,7 @@ on:
       - "modules/**"
       - "app.js"
       - "index.html"
+      - ".github/workflows/market-stream.yml"
   workflow_dispatch:
   schedule:
     - cron: "2-59/5 * * * *"

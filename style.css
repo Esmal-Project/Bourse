@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Estedad:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap");
+:root{--font:"Vazirmatn",-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}
+500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap");
 :root{
   --bg:#070b10;--panel:#0b1118;--panel2:#0e151d;--line:#1b2732;--line2:#243440;
   --text:#e8edf2;--muted:#778894;--accent:#d6a85b;--green:#36d58a;--red:#ff6673;--blue:#61a8ff;
@@ -75,8 +76,8 @@ body{font-family:"Vazirmatn","IBM Plex Sans Arabic",Tahoma,sans-serif;letter-spa
 @media(max-width:650px){.boot-title{font-size:19px;letter-spacing:3px}.boot-mark{font-size:44px}}
 
 
+
 /* YASHAM typography */
-body,button,input,select,textarea{font-family:"Estedad",Tahoma,sans-serif!important}
-.brand,.panel-title,.symbol,.label,.value,.analysis-card,.scan-pill,.search input,.search button,.scan-btn,.status,.freshness,th,td{font-family:"Estedad",Tahoma,sans-serif!important}
+body,button,input,select,textarea{font-family:var(--font)!important}
+.brand,.panel-title,.symbol,.label,.value,.analysis-card,.scan-pill,.search input,.search button,.scan-btn,.status,.freshness,th,td{font-family:var(--font)!important}
 .price,.value,th,td{font-variant-numeric:tabular-nums}
-body{font-weight:500}.label,.muted,.freshness{font-weight:400}.panel-title,.brand,.symbol,.search button,.scan-btn{font-weight:800}

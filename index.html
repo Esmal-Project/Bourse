@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="style.css?v=20260921">
 </head>
 <body>
-<div class="boot-screen" aria-hidden="true"><div class="boot-grid"></div><div class="boot-glow"></div><div class="boot-content"><div class="boot-mark">◈</div><div class="boot-title">YASHAM</div><div class="boot-sub">IRAN MARKET INTELLIGENCE</div><div class="boot-line"></div><div class="boot-status"></div><div class="boot-bar"><i></i></div></div></div>
+<div class="boot-screen" aria-hidden="true" style="display:none"><div class="boot-grid"></div><div class="boot-glow"></div><div class="boot-content"><div class="boot-mark">◈</div><div class="boot-title">YASHAM</div><div class="boot-sub">IRAN MARKET INTELLIGENCE</div><div class="boot-line"></div><div class="boot-status"></div><div class="boot-bar"><i></i></div></div></div>
 <main class="app">
 <header class="topbar"><div class="brand-block"><div class="brand">YASHAM</div><div class="brand-sub">هوش بازار سرمایه ایران</div></div><div id="statusWrap" class="status market-status"><span class="dot"></span><span id="status">آماده</span><span id="freshness" class="freshness">داده: —</span></div></header>
 
@@ -62,7 +62,7 @@
 
 <section class="panel raw"><details><summary>داده خام و منبع</summary><div class="raw-grid"><div>منبع: <span id="source">—</span></div><div>آخرین داده خام قیمت</div></div><pre id="raw">—</pre></details></section>
 </main>
-<script src="config/config.js?v=b0fd1008"></script><script src="modules/api.js?v=b0fd1008"></script><script src="modules/symbol.js?v=b0fd1008"></script><script src="modules/chart.js?v=b0fd1008"></script><script src="modules/market.js?v=b0fd1008"></script><script src="modules/analysis.js?v=b0fd1008"></script><script src="modules/flow.js?v=b0fd1008"></script><script src="modules/scanner.js?v=b0fd1008"></script><script src="modules/scan-history.js?v=b0fd1008"></script><script src="modules/filters.js?v=b0fd1008"></script><script src="modules/score.js?v=b0fd1008"></script><script src="app.js?v=a6769e5d"></script>
+<script src="config/config.js?v=b0fd1008"></script><script src="modules/api.js?v=b0fd1008"></script><script src="modules/symbol.js?v=b0fd1008"></script><script src="modules/chart.js?v=b0fd1008"></script><script src="modules/market.js?v=b0fd1008"></script><script src="modules/analysis.js?v=b0fd1008"></script><script src="modules/flow.js?v=b0fd1008"></script><script src="modules/scanner.js?v=b0fd1008"></script><script src="modules/scan-history.js?v=b0fd1008"></script><script src="modules/filters.js?v=b0fd1008"></script><script src="modules/score.js?v=b0fd1008"></script><script src="app.js?v=cebec134"></script>
 <script>
 (function(){
  const sync=()=>{const s=document.getElementById("symbol"),p=document.getElementById("price"),c=document.getElementById("change");const a=document.getElementById("selectedLabel"),b=document.getElementById("selectedPrice"),d=document.getElementById("selectedChange");if(a&&s)a.textContent=s.textContent||"کل بازار";if(b&&p)b.textContent=p.textContent||"—";if(d&&c){d.textContent=c.textContent||"—";d.className=c.className.includes("negative")?"negative":c.className.includes("positive")?"positive":""}const rows=document.querySelectorAll("#scanTableBody .scan-row");const wc=document.getElementById("watchCount");if(wc)wc.textContent=rows.length?rows.length.toLocaleString("fa-IR"):"—";};

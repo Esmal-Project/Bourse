@@ -303,7 +303,7 @@ document.addEventListener("click",e=>{
 scanMarket();
 function startLiveRefresh(){
   clearInterval(refreshTimer);
-  const ms=window.BOURSE_CONFIG?.refreshIntervalMs??5000;
+  const ms=window.BOURSE_CONFIG?.marketWatchRefreshMs??5000;
   refreshTimer=setInterval(async()=>{
     if(refreshing||document.hidden)return;
     refreshing=true;
@@ -361,6 +361,6 @@ async function refreshCurrentLive(){
 }
 function startLiveDetailRefresh(){
   clearInterval(liveTimer);
-  liveTimer=setInterval(refreshCurrentLive,window.BOURSE_CONFIG?.refreshIntervalMs??5000);
+  liveTimer=setInterval(refreshCurrentLive,window.BOURSE_CONFIG?.liveRefreshMs??1500);
 }
 startLiveDetailRefresh();

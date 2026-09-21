@@ -9,6 +9,7 @@ TARGETS=[
     "https://cdn.tsetmc.com/api/ClosingPrice/GetMarketWatch?market=0&paperTypes%5B0%5D=1&paperTypes%5B1%5D=2&paperTypes%5B2%5D=3&paperTypes%5B3%5D=4&paperTypes%5B4%5D=5&paperTypes%5B5%5D=6&paperTypes%5B6%5D=7&paperTypes%5B7%5D=8&paperTypes%5B8%5D=9&withBestLimits=false&hEven=0&RefID=0",
     "https://www.tsetmc.com/tsev2/data/MarketWatchPlus.aspx?h=0&r=0",
     "http://service.tsetmc.com/tsev2/data/MarketWatchPlus.aspx?h=0&r=0",
+    "https://old.tsetmc.com/tsev2/data/MarketWatchPlus.aspx?h=0&r=0",
 ]
 HEADERS={
     "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/153 Safari/537.36",
@@ -18,7 +19,7 @@ HEADERS={
 }
 KNOWN_PROXIES=["http://85.133.190.40:8097"]
 
-def fetch(url, proxy=None, timeout=5):
+def fetch(url, proxy=None, timeout=8):
     handler=urllib.request.ProxyHandler({"http":proxy,"https":proxy}) if proxy else urllib.request.ProxyHandler({})
     opener=urllib.request.build_opener(handler)
     req=urllib.request.Request(url, headers=HEADERS)
@@ -94,17 +95,21 @@ def try_one(label, url, proxy):
         pass
     return None
 
-# 1) Known working Iran proxy first.
-for proxy in KNOWN_PROXIES:
-    for target in TARGETS[:2]:
-        result=try_one("known-proxy",target,proxy)
-        if result:
-            write_result(*result)
-            raise SystemExit(0)
+# 1) Known Iranian proxy first. TSETMC can intermittently reset/block a proxy,
+# so retry each route several times before falling back to discovery.
+for attempt in range(3):
+    for proxy in KNOWN_PROXIES:
+        targets = TARGETS if attempt == 0 else TARGETS[:3]
+        for target in targets:
+            result=try_one(f"known-proxy-{attempt+1}",target,proxy)
+            if result:
+                write_result(*result)
+                raise SystemExit(0)
 
 # 2) Direct access can still work on some runners.
-for target in TARGETS:
-    result=try_one("direct",target,None)
+for attempt in range(2):
+    for target in TARGETS:
+        result=try_one(f"direct-{attempt+1}",target,None)
     if result:
         write_result(*result)
         raise SystemExit(0)
@@ -116,7 +121,7 @@ def proxy_list():
     try:
         _, body, _=fetch(url, timeout=8)
         return [x.strip() for x in body.decode("utf-8","ignore").splitlines()
-                if x.startswith("http://") or x.startswith("https://")][:12]
+                if x.startswith("http://") or x.startswith("https://")][:30]
     except Exception:
         return []
 
@@ -124,7 +129,7 @@ candidates=[p for p in proxy_list() if p not in KNOWN_PROXIES]
 tasks=[(p,target) for p in candidates for target in TARGETS[:2]]
 random.shuffle(tasks)
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
     futures=[pool.submit(try_one,p,target,p) for p,target in tasks]
     for future in concurrent.futures.as_completed(futures):
         result=future.result()
@@ -134,4 +139,4 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
             write_result(*result)
             raise SystemExit(0)
 
-raise SystemExit("All TSETMC market-watch sources failed")
+raise SystemExit("All TSETMC market-watch sources failed after retries")

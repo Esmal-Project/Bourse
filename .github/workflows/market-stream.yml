@@ -1,12 +1,13 @@
 name: Market Stream Relay
 # persistent collector loop
+# push trigger is intentionally broad so the collector can be bootstrapped without waiting for schedule
 
 on:
   push:
-    paths:
-      - ".github/workflows/market-stream.yml"
+    branches:
+      - main
   schedule:
-    - cron: "0 * * * *"
+    - cron: "17/5 * * * *"
   workflow_dispatch:
 
 permissions:

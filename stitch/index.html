@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Yasham Stitch — Market Terminal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Vazirmatn:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#060b18;color:#e2e8f0;font-family:Vazirmatn,sans-serif}.mono{font-family:"JetBrains Mono",monospace;direction:ltr}.card{background:#0e172a;border:1px solid #1e293b;border-radius:14px}.up{color:#10b981}.down{color:#ef4444}table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #1e293b;font-size:12px;white-space:nowrap}th{color:#94a3b8;font-size:11px}.tab.active{color:#ffc174;background:#172235}.pulse{animation:p 1.6s infinite}@keyframes p{50%{opacity:.35}}
+</style></head>
+<body>
+<header class="sticky top-0 z-50 border-b border-slate-800/80 bg-[#060b18]/90 backdrop-blur-xl">
+<div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+<div class="flex items-center gap-3"><div class="w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-slate-950" style="background:#ffc174">Y</div><div><b>یاشام | هوش بازار</b><div class="text-[10px] mono text-slate-500">STITCH MARKET TERMINAL</div></div></div>
+<div class="flex gap-1"><button class="tab active rounded-lg px-3 py-2 text-xs" data-tab="market">دیده‌بان</button><button class="tab rounded-lg px-3 py-2 text-xs" data-tab="ai">هوش پول</button><button class="tab rounded-lg px-3 py-2 text-xs" data-tab="portfolio">سبد</button></div>
+<div class="flex items-center gap-2 text-xs"><i id="dot" class="w-2 h-2 rounded-full bg-slate-500"></i><span id="state" class="text-slate-400">اتصال...</span></div>
+</div></header>
+<main class="max-w-7xl mx-auto px-4 py-5 space-y-4">
+<section class="grid grid-cols-2 md:grid-cols-4 gap-3">
+<div class="card p-4"><small class="text-slate-500">فید بازار</small><div id="feed" class="font-bold mt-2">در انتظار</div><div id="time" class="mono text-[10px] text-slate-500 mt-1">—</div></div>
+<div class="card p-4"><small class="text-slate-500">نمادهای خوانده‌شده</small><div id="count" class="mono text-2xl font-bold mt-2">۰</div></div>
+<div class="card p-4"><small class="text-slate-500">بیشترین رشد</small><div id="upName" class="font-bold mt-2">—</div><div id="upPct" class="mono up text-xs">—</div></div>
+<div class="card p-4"><small class="text-slate-500">بیشترین افت</small><div id="downName" class="font-bold mt-2">—</div><div id="downPct" class="mono down text-xs">—</div></div>
+</section>
+
+<section id="market" class="space-y-4 panel">
+<div class="card p-4 flex flex-wrap justify-between gap-3 items-center"><div><b>Market Watch</b><div class="text-[11px] text-slate-500">ظاهر Stitch بر پایه کدهای ارسالی؛ داده از فید TSETMC/پروکسی</div></div><div class="flex gap-2"><input id="q" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs" placeholder="جستجوی نماد"><button id="refresh" class="rounded-lg px-4 py-2 text-xs font-bold" style="background:#ffc174;color:#201506">بروزرسانی</button></div></div>
+<div class="card overflow-hidden"><div class="overflow-x-auto"><table><thead><tr><th>نماد</th><th>آخرین</th><th>پایانی</th><th>تغییر</th><th>حجم</th><th>ارزش</th><th>وضعیت</th></tr></thead><tbody id="rows"><tr><td colspan="7" class="text-center py-12 text-slate-500">در حال دریافت...</td></tr></tbody></table></div></div>
+</section>
+
+<section id="ai" class="panel hidden space-y-4">
+<div class="grid md:grid-cols-3 gap-3"><div class="card p-5"><small class="text-slate-500">Momentum</small><div id="momentum" class="text-2xl font-bold mt-2">—</div></div><div class="card p-5"><small class="text-slate-500">فعالیت بالا</small><div id="active" class="text-2xl font-bold mt-2">—</div></div><div class="card p-5"><small class="text-slate-500">نمادهای منفی قوی</small><div id="weak" class="text-2xl font-bold mt-2">—</div></div></div>
+<div class="card p-5 text-xs text-slate-400">این بخش فعلاً اسکن داده‌ی زنده را انجام می‌دهد و هیچ «پیش‌بینی» یا سیگنال ساختگی نمایش نمی‌دهد. موتورهای تحلیلی کدهای Stitch می‌توانند در مرحله بعد به همین فید متصل شوند.</div>
+</section>
+
+<section id="portfolio" class="panel hidden space-y-4"><div class="card p-6"><b>پورتفوی یاشام</b><p class="text-xs text-slate-500">پوسته‌ی Stitch آماده است؛ اتصال به ماژول‌های پورتفوی فعلی Bourse در مرحله بعد انجام می‌شود.</p></div></section>
+</main>
+<script>
+const PROXY='https://brsapi-proxy.yasharesmaeili.workers.dev';
+const TARGET='http://old.tsetmc.ir/tsev2/data/MarketWatchPlus.aspx';
+const FALLBACK='https://api.allorigins.win/raw?url='+encodeURIComponent(TARGET);
+let data=[];
+const fa=n=>Number(n||0).toLocaleString('fa-IR');
+function status(ok,msg){dot.className='w-2 h-2 rounded-full '+(ok?'bg-emerald-400 pulse':'bg-rose-400');state.textContent=msg;feed.textContent=ok?'متصل':'در دسترس نیست';time.textContent=new Date().toLocaleTimeString('fa-IR')}
+function parse(raw){return raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{const a=line.split(';');const name=(a[0]||a[1]||'').trim();const n=a.map(x=>Number(String(x).replace(/,/g,''))).filter(Number.isFinite);if(!name||n.length<2)return null;let last=n[0],close=n[1],pct=close?((last-close)/close)*100:0;const p=n.find(v=>Math.abs(v)>0.01&&Math.abs(v)<100);if(Number.isFinite(p))pct=p;return{name,last,close,pct,volume:n[2]||0,value:n[3]||0}}).filter(Boolean).slice(0,800)}
+function render(){const s=(q.value||'').toLowerCase();const list=data.filter(x=>x.name.toLowerCase().includes(s)).slice(0,150);rows.innerHTML=list.length?list.map(x=>'<tr class="hover:bg-white/[.025]"><td class="font-bold">'+x.name+'</td><td class="mono">'+fa(x.last)+'</td><td class="mono">'+fa(x.close)+'</td><td class="mono '+(x.pct>=0?'up':'down')+'">'+(x.pct>=0?'+':'')+x.pct.toFixed(2)+'%</td><td class="mono">'+fa(x.volume)+'</td><td class="mono">'+fa(x.value)+'</td><td>'+(x.pct>2?'قوی':x.pct<-2?'منفی':'عادی')+'</td></tr>').join(''):'<tr><td colspan="7" class="text-center py-12 text-slate-500">داده‌ای پیدا نشد</td></tr>'}
+async function load(){status(false,'دریافت...');let raw='';for(const u of [PROXY+'/api/market-watch',FALLBACK]){try{const r=await fetch(u,{cache:'no-store'});if(r.ok){const t=await r.text();if(t.length>100){raw=t;break}}}catch(e){}}if(!raw){status(false,'خطا');return}data=parse(raw).sort((a,b)=>b.pct-a.pct);status(true,'زنده');count.textContent=fa(data.length);const d=[...data].sort((a,b)=>a.pct-b.pct);if(data[0]){upName.textContent=data[0].name;upPct.textContent='+'+data[0].pct.toFixed(2)+'%'}if(d[0]){downName.textContent=d[0].name;downPct.textContent=d[0].pct.toFixed(2)+'%'}momentum.textContent=fa(data.filter(x=>x.pct>2).length);weak.textContent=fa(data.filter(x=>x.pct<-2).length);active.textContent=fa(data.filter(x=>Math.abs(x.pct)>1).length);render()}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden'));document.getElementById(b.dataset.tab).classList.remove('hidden');document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active')});q.oninput=render;refresh.onclick=load;load();setInterval(load,30000);
+</script></body></html>

@@ -59,9 +59,14 @@ function normalizeMarketWatch(raw){
       trades:scanNum(r?.ztt??r?.tno??r?.zTotTran??r?.tradeCount),
       min:scanNum(r?.pmn??r?.pmin??r?.priceMin??r?.minValue),
       max:scanNum(r?.pmx??r?.pmax??r?.priceMax??r?.maxValue),
-      flow:r?.flow??null,raw:r
+      flow:r?.flow??null,
+      yVal:r?.yVal??r?.yval??r?.assetType??r?.asset_type??null,
+      raw:r
     };
-  }).filter(r=>r.insCode&&r.symbol&&!isOptionInstrument(r));
+  }).filter(r=>{
+    const flow=Number(r.flow), yVal=String(r.yVal??"").trim();
+    return r.insCode&&r.symbol&&(flow===1||flow===2)&&yVal==="300"&&!isOptionInstrument(r.raw||r);
+  });
 }
 function scanSort(rows,key="change",dir="desc"){
   return [...rows].sort((a,b)=>{

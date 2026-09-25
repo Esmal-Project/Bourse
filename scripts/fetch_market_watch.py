@@ -50,6 +50,8 @@ def parse_payload(url, body):
                 "min":x[11],
                 "max":x[12],
                 "yesterday":x[13],
+                "flow":x[17],
+                "yVal":x[22],
             })
         return {"marketwatch":rows} if rows else None
     try:

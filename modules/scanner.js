@@ -6,6 +6,13 @@ function scanPercent(v){
   if(v!=null&&typeof v==="object")v=v.percent??v.Percent??v.value??v.Value??v.change??v.Change;
   return scanNum(v);
 }
+function isOptionInstrument(raw){
+  const symbol=String(raw?.lva??raw?.lVal18??raw?.l18??raw?.lVal18AFC??raw?.instrument_Name??raw?.instrumentName??raw?.symbol??"").normalize("NFKC").trim();
+  const name=String(raw?.lvc??raw?.lVal30??raw?.l30??raw?.companyNamePersian??raw?.company_Name_Persian??raw?.name??"").normalize("NFKC").trim();
+  const label=(symbol+" "+name).replace(/[يى]/g,"ی").replace(/ك/g,"ک").replace(/[\u200c\u200d]/g," ");
+  return /اختیار\s*(خرید|فروش)/i.test(label)||/^(ض|ط)/.test(symbol);
+}
+
 function normalizeMarketWatch(raw){
   const base=raw?.payload??raw;
   const rows=base?.marketwatch||base?.data||base?.Items||base?.items||base;
@@ -31,7 +38,7 @@ function normalizeMarketWatch(raw){
       max:scanNum(r?.pmx??r?.pmax??r?.priceMax??r?.maxValue),
       flow:r?.flow??null,raw:r
     };
-  }).filter(r=>r.insCode&&r.symbol);
+  }).filter(r=>r.insCode&&r.symbol&&!isOptionInstrument(r));
 }
 function scanSort(rows,key="change",dir="desc"){
   return [...rows].sort((a,b)=>{
@@ -85,4 +92,4 @@ function applyMarketFilters(rows,f){
     return true;
   });
 }
-window.BourseScanner={normalize:normalizeMarketWatch,sort:scanSort,stats:scanStats,activity:addActivityScore,filter:applyMarketFilters};
+window.BourseScanner={normalize:normalizeMarketWatch,sort:scanSort,stats:scanStats,activity:addActivityScore,filter:applyMarketFilters,isOptionInstrument};

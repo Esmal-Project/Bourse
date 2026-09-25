@@ -31,7 +31,7 @@ function isOptionInstrument(raw){
   const name=optionText(raw?.lvc??raw?.lVal30??raw?.l30??raw?.companyNamePersian??raw?.company_Name_Persian??raw?.name??"");
   const all=collectText(raw);
   if(/^(ض|ط)/.test(symbol))return true;
-  if(/اختیار\s*(خرید|فروش)|اختیارخ|اختیرف|\b(call|put)\b|\boption\b/i.test(symbol+" "+name+" "+all))return true;
+  if(/اختیار\s*(خرید|فروش)|اختیارخ|اختیرف|\b(call|put)\b|\boption\b|سلف(?:\s+موازی)?|مرابحه/i.test(symbol+" "+name+" "+all))return true;
   const typeValues=["option","call option","put option","اختیار خرید","اختیار فروش","اختیارخ","اختیرف","derivative option","option contract"];
   return typeValues.some(v=>all.includes(optionText(v)));
 }

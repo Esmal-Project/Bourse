@@ -6,11 +6,34 @@ function scanPercent(v){
   if(v!=null&&typeof v==="object")v=v.percent??v.Percent??v.value??v.Value??v.change??v.Change;
   return scanNum(v);
 }
+function optionText(v){
+  return String(v??"").normalize("NFKC")
+    .replace(/[يى]/g,"ی").replace(/ك/g,"ک")
+    .replace(/[\u200c\u200d\u200e\u200f]/g," ").trim().toLocaleLowerCase("fa-IR");
+}
+function collectText(raw){
+  const out=[];
+  const walk=(v,key="")=>{
+    if(v==null)return;
+    if(typeof v==="string"||typeof v==="number"||typeof v==="boolean"){
+      out.push(optionText(v)); out.push(optionText(key)); return;
+    }
+    if(Array.isArray(v)){for(const item of v)walk(item,key);return;}
+    if(typeof v==="object"){
+      for(const [k,val] of Object.entries(v))walk(val,k);
+    }
+  };
+  walk(raw);
+  return out.join(" ");
+}
 function isOptionInstrument(raw){
-  const symbol=String(raw?.lva??raw?.lVal18??raw?.l18??raw?.lVal18AFC??raw?.instrument_Name??raw?.instrumentName??raw?.symbol??"").normalize("NFKC").trim();
-  const name=String(raw?.lvc??raw?.lVal30??raw?.l30??raw?.companyNamePersian??raw?.company_Name_Persian??raw?.name??"").normalize("NFKC").trim();
-  const label=(symbol+" "+name).replace(/[يى]/g,"ی").replace(/ك/g,"ک").replace(/[\u200c\u200d]/g," ");
-  return /اختیار\s*(خرید|فروش)/i.test(label)||/^(ض|ط)/.test(symbol);
+  const symbol=optionText(raw?.lva??raw?.lVal18??raw?.l18??raw?.lVal18AFC??raw?.instrument_Name??raw?.instrumentName??raw?.symbol??"");
+  const name=optionText(raw?.lvc??raw?.lVal30??raw?.l30??raw?.companyNamePersian??raw?.company_Name_Persian??raw?.name??"");
+  const all=collectText(raw);
+  if(/^(ض|ط)/.test(symbol))return true;
+  if(/اختیار\s*(خرید|فروش)|اختیارخ|اختیرف|\b(call|put)\b|\boption\b/i.test(symbol+" "+name+" "+all))return true;
+  const typeValues=["option","call option","put option","اختیار خرید","اختیار فروش","اختیارخ","اختیرف","derivative option","option contract"];
+  return typeValues.some(v=>all.includes(optionText(v)));
 }
 
 function normalizeMarketWatch(raw){
